@@ -301,7 +301,7 @@ const renderer  = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.6;
+renderer.toneMappingExposure = 1.42;
 container.appendChild(renderer.domElement);
 
 /* ── scene + environment ── */
@@ -322,6 +322,61 @@ new RGBELoader().load(
     tex.dispose(); pmrem.dispose();
   }
 );
+
+function createGemRefractionEnv() {
+  const envScene = new THREE.Scene();
+  envScene.background = new THREE.Color(0xf2f4f7);
+
+  const panels = [];
+  const addPanel = (w, h, color, intensity, position, rotation) => {
+    const mat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(color).multiplyScalar(intensity),
+      side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+    mesh.position.copy(position);
+    mesh.rotation.copy(rotation);
+    envScene.add(mesh);
+    panels.push(mesh);
+  };
+
+  addPanel(7.5, 2.4, 0xffffff, 0.90, new THREE.Vector3(0, 3.3, 0.2), new THREE.Euler(Math.PI / 2, 0, 0));
+  addPanel(3.4, 2.0, 0xffffff, 0.48, new THREE.Vector3(2.7, 1.5, 1.8), new THREE.Euler(0, -0.75, 0));
+  addPanel(3.4, 2.0, 0xffffff, 0.45, new THREE.Vector3(-2.7, 1.4, 1.6), new THREE.Euler(0, 0.78, 0));
+  addPanel(5.0, 1.6, 0xffffff, 0.24, new THREE.Vector3(0, 0.8, -3.4), new THREE.Euler(0, Math.PI, 0));
+  addPanel(1.0, 1.0, 0xffffff, 0.56, new THREE.Vector3(0.45, 2.2, 2.7), new THREE.Euler(0, Math.PI, 0));
+  addPanel(0.9, 0.9, 0xffffff, 0.50, new THREE.Vector3(-0.65, 2.0, 2.4), new THREE.Euler(0.08, Math.PI * 0.92, 0));
+
+  const strip = new THREE.Mesh(
+    new THREE.PlaneGeometry(7.0, 0.85),
+      new THREE.MeshBasicMaterial({
+      color: new THREE.Color(0xd8dde6).multiplyScalar(0.12),
+      side: THREE.DoubleSide,
+    })
+  );
+  strip.position.set(0, 0.15, 3.0);
+  envScene.add(strip);
+  panels.push(strip);
+
+  const cubeRT = new THREE.WebGLCubeRenderTarget(512, {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter,
+    generateMipmaps: false,
+    depthBuffer: false,
+    colorSpace: THREE.LinearSRGBColorSpace,
+  });
+  const cubeCam = new THREE.CubeCamera(0.1, 20, cubeRT);
+  cubeCam.update(renderer, envScene);
+
+  for (const panel of panels) {
+    panel.geometry.dispose();
+    panel.material.dispose();
+  }
+
+  return cubeRT.texture;
+}
+
+const gemRefractionEnv = createGemRefractionEnv();
 
 /* ── camera + controls ── */
 const camera = new THREE.PerspectiveCamera(30, container.clientWidth / container.clientHeight, 0.01, 100);
@@ -501,7 +556,7 @@ function buildGemMaterial(geometry) {
   }
   if (!isFinite(minR) || minR <= 0) minR = maxR * 0.4;
 
-  const cubeRT = new THREE.WebGLCubeRenderTarget(256, {
+  const cubeRT = new THREE.WebGLCubeRenderTarget(512, {
     minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter,
     generateMipmaps: false, depthBuffer: false,
     colorSpace: THREE.LinearSRGBColorSpace,
@@ -522,9 +577,13 @@ function buildGemMaterial(geometry) {
 
   const u = {
     uEye:    { value: new THREE.Vector3() },
-    uAbsorb: { value: new THREE.Vector3(0.00065, 0.00050, 0.00038) },
-    uDisp:   { value: new THREE.Vector3(2.405, 2.417, 2.429) },
+    uAbsorb: { value: new THREE.Vector3(0.00016, 0.00015, 0.00014) },
+    uDisp:   { value: new THREE.Vector3(2.4025, 2.4200, 2.4375) },
+    uGemTint: { value: new THREE.Color(0xBBBBBB) },
     uGemMap: { value: cubeRT.texture },
+    uGemEnvMap: { value: gemRefractionEnv },
+    uGemEnvIntensity: { value: 1.55 },
+    uReflStrength: { value: 0.13 },
     uMinR:   { value: minR },
     uMaxR:   { value: maxR },
     uCtr:    { value: ctr },
@@ -542,39 +601,38 @@ function buildGemMaterial(geometry) {
       }`,
     fragmentShader: `
       precision highp float;
-      uniform vec3 uEye, uAbsorb, uDisp, uCtr;
+      uniform vec3 uEye, uAbsorb, uDisp, uCtr, uGemTint;
       uniform float uMinR, uMaxR;
+      uniform float uGemEnvIntensity, uReflStrength;
       uniform mat4  uEnvRot;
-      uniform samplerCube uGemMap;
+      uniform samplerCube uGemMap, uGemEnvMap;
       varying vec3 vPos, vNor;
 
       vec3 gemEnv(vec3 d) {
         d = normalize((uEnvRot * vec4(d,0.0)).xyz);
 
         float up = clamp(d.y * 0.5 + 0.5, 0.0, 1.0);
-        float horizon = pow(1.0 - abs(d.y), 1.9);
-        float front = clamp(d.z * 0.5 + 0.5, 0.0, 1.0);
+        float horizon = pow(1.0 - abs(d.y), 2.15);
 
-        vec3 base =
-          vec3(0.80, 0.84, 0.92) * (0.08 + 0.22 * pow(up, 1.2)) +
-          vec3(0.98, 0.99, 1.00) * (0.05 + 0.09 * horizon) +
-          vec3(0.88, 0.90, 0.96) * (0.02 + 0.04 * front);
+        vec3 sampled = textureCube(uGemEnvMap, d).rgb;
+        vec3 env = mix(vec3(0.62, 0.64, 0.68), sampled, 0.55) * uGemEnvIntensity;
+        vec3 baseLift =
+          vec3(0.090, 0.094, 0.100) * (0.32 + 0.68 * pow(up, 0.95)) +
+          vec3(0.030, 0.032, 0.036) * (0.18 + 0.42 * horizon);
 
-        float B0 = pow(max(0.0, dot(d, normalize(vec3( 0.00, 0.98, 0.18)))), 18.0) * 0.54;
-        float B1 = pow(max(0.0, dot(d, normalize(vec3( 0.56, 0.78, 0.24)))), 24.0) * 0.36;
-        float B2 = pow(max(0.0, dot(d, normalize(vec3(-0.58, 0.76, 0.12)))), 24.0) * 0.34;
-        float B3 = pow(max(0.0, dot(d, normalize(vec3( 0.00, 0.58,-0.82)))), 20.0) * 0.20;
+        float B0 = pow(max(0.0, dot(d, normalize(vec3( 0.00, 0.99, 0.14)))), 18.0) * 0.15;
+        float B1 = pow(max(0.0, dot(d, normalize(vec3( 0.48, 0.83, 0.28)))), 24.0) * 0.08;
+        float B2 = pow(max(0.0, dot(d, normalize(vec3(-0.50, 0.82, 0.18)))), 24.0) * 0.08;
 
-        float P0 = pow(max(0.0, dot(d, normalize(vec3( 0.22, 0.98, 0.42)))), 120.0) * 3.2;
-        float P1 = pow(max(0.0, dot(d, normalize(vec3(-0.34, 0.94, 0.20)))), 110.0) * 2.4;
-        float P2 = pow(max(0.0, dot(d, normalize(vec3( 0.00, 1.00, 0.00)))), 220.0) * 5.4;
-        float P3 = pow(max(0.0, dot(d, normalize(vec3( 0.48, 0.80,-0.18)))), 120.0) * 1.8;
+        float pinA = pow(max(0.0, dot(d, normalize(vec3( 0.00, 0.99, 0.10)))), 140.0) * 0.07;
+        float pinB = pow(max(0.0, dot(d, normalize(vec3( 0.28, 0.94, 0.16)))), 110.0) * 0.04;
+        float pinC = pow(max(0.0, dot(d, normalize(vec3(-0.30, 0.92, 0.10)))), 110.0) * 0.035;
 
-        float darkBand = pow(max(0.0, dot(d, normalize(vec3(0.0, -0.10, 1.0)))), 9.0) * 0.14;
-        vec3 softboxes = vec3(1.00, 1.02, 1.06) * (B0 + B1 + B2 + B3);
-        vec3 pinFire = vec3(1.08, 1.03, 0.98) * (P0 + P1 + P2 + P3);
+        float darkBand = pow(max(0.0, dot(d, normalize(vec3(0.0, -0.03, 1.0)))), 8.0) * 0.006;
+        vec3 softboxes = vec3(1.00, 1.01, 1.02) * (B0 + B1 + B2);
+        vec3 pinFire = vec3(1.03, 1.01, 0.99) * (pinA + pinB + pinC);
 
-        return max(base + softboxes + pinFire - vec3(darkBand), vec3(0.02));
+        return max(env * 0.82 + baseLift + softboxes + pinFire - vec3(darkBand), vec3(0.16));
       }
       float fresnel(vec3 i,vec3 n,float ior){
         float cI=abs(dot(i,n)),s2=(1.0/ior)*(1.0/ior)*(1.0-cI*cI);
@@ -596,7 +654,7 @@ function buildGemMaterial(geometry) {
       }
       vec3 traceChannel(vec3 p,vec3 d,float ior){
         float inv=1.0/ior,w=1.0,dist=0.0; vec3 col=vec3(0.0);
-        for(int i=0;i<8;i++){
+        for(int i=0;i<6;i++){
           vec3 hn; float t=gemHit(p,d,hn); dist+=t; p+=t*d;
           vec3 rf=refract(d,-hn,ior); bool tir=(dot(rf,rf)<0.01);
           float R=tir?1.0:fresnel(d,-hn,inv);
@@ -614,12 +672,17 @@ function buildGemMaterial(geometry) {
         float R_entry=fresnel(eye,n,uDisp.y);
         float faceOn = pow(clamp(abs(dot(eye, n)), 0.0, 1.0), 4.0);
         vec3 traced = max(vec3(rc.r, gc.g, bc.b), vec3(0.0));
-        vec3 sparkle = gemEnv(reflect(eye,n)) * mix(1.55, 1.05, faceOn);
-        vec3 faceLight = gemEnv(-eye) * mix(0.03, 0.01, faceOn);
-        traced = pow(traced, vec3(1.02 + faceOn * 0.10));
-        vec3 finalColor = traced * (1.0 - R_entry) + sparkle * R_entry + faceLight;
-        vec3 compressed = finalColor / (1.0 + finalColor * 0.85);
-        finalColor = mix(finalColor, compressed, 0.18 + faceOn * 0.42);
+        vec3 attenuation = mix(vec3(1.0), uGemTint, 0.03);
+        traced *= attenuation;
+
+        vec3 reflection = gemEnv(reflect(eye,n)) * (uReflStrength * mix(1.18, 0.92, faceOn));
+        vec3 faceLight = gemEnv(-eye) * mix(0.052, 0.020, faceOn);
+        vec3 tableLift = vec3(0.030, 0.032, 0.036) * faceOn;
+        traced = pow(traced, vec3(1.01 + faceOn * 0.025)) + tableLift;
+
+        vec3 finalColor = traced * (1.0 - R_entry) + reflection * R_entry + faceLight;
+        vec3 compressed = finalColor / (1.0 + finalColor * 0.46);
+        finalColor = mix(finalColor, compressed, 0.14 + faceOn * 0.24);
         gl_FragColor=vec4(finalColor,1.0);
       }`,
   });
