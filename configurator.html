@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design Your Ring</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #F5F1ED;
+      color: #333;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      height: 54px;
+      background: #1A1A1A;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 0;
+      flex-shrink: 0;
+      z-index: 20;
+      position: relative;
+    }
+    .header-brand {
+      color: #B8963E;
+      font-size: 17px;
+      letter-spacing: 0.18em;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .header-sep {
+      width: 1px;
+      height: 18px;
+      background: #3A3A3A;
+      margin: 0 16px;
+    }
+    .header-sub {
+      color: #888;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── APP / MAIN LAYOUT ── */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── VIEWER ── */
+    .viewer-wrap {
+      flex: 1;
+      position: relative;
+      background: radial-gradient(ellipse at 50% 40%, #FFFFFF 0%, #EDE7DF 100%);
+    }
+    #viewer {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── LOADING OVERLAY ── */
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(245, 241, 237, 0.75);
+      backdrop-filter: blur(2px);
+      z-index: 10;
+      transition: opacity 0.35s;
+    }
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .spinner {
+      width: 34px;
+      height: 34px;
+      border: 3px solid #2A2A2A;
+      border-top-color: #C8A84A;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── CAMERA PRESET BUTTONS ── */
+    .cam-btns {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 5;
+    }
+    .cam-btn {
+      padding: 5px 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(20,20,20,0.85);
+      backdrop-filter: blur(6px);
+      border-radius: 20px;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      color: #888;
+      transition: all 0.18s;
+      text-transform: uppercase;
+    }
+    .cam-btn:hover {
+      background: rgba(30,30,30,0.95);
+      color: #C8A84A;
+      border-color: #C8A84A;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 300px;
+      background: #111111;
+      border-left: 1px solid #1E1E1E;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: #2A2A2A; border-radius: 4px; }
+
+    /* ── SECTIONS ── */
+    .section {
+      padding: 18px 18px 16px;
+      border-bottom: 1px solid #1E1E1E;
+    }
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 13px;
+    }
+
+    /* ── STYLE CARDS (2-col, ring band) ── */
+    .style-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .style-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 8px 10px;
+      border: 1.5px solid #2A2A2A;
+      border-radius: 9px;
+      background: #1A1A1A;
+      cursor: pointer;
+      transition: all 0.17s;
+      gap: 7px;
+      font: inherit;
+    }
+    .style-card:hover  { border-color: #C8A84A; background: #1E1A10; }
+    .style-card.active { border-color: #C8A84A; background: #1E1A10; }
+    .style-card svg    { width: 56px; height: 30px; }
+    .style-card span   { font-size: 11px; color: #666; letter-spacing: 0.04em; }
+    .style-card.active span { color: #C8A84A; font-weight: 600; }
+
+    /* ── SHAPE CARDS (3-col) ── */
+    .shape-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+    }
+    .shape-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 9px 5px 7px;
+      border: 1.5px solid #2A2A2A;
+      border-radius: 9px;
+      background: #1A1A1A;
+      cursor: pointer;
+      transition: all 0.17s;
+      gap: 5px;
+      font: inherit;
+    }
+    .shape-card:hover  { border-color: #C8A84A; background: #1E1A10; }
+    .shape-card.active { border-color: #C8A84A; background: #1E1A10; }
+    .shape-card svg    { width: 38px; height: 38px; }
+    .shape-card span   { font-size: 10px; color: #666; letter-spacing: 0.04em; }
+    .shape-card.active span { color: #C8A84A; font-weight: 600; }
+
+    /* ── METAL SWATCHES ── */
+    .swatch-row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .metal-swatch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font: inherit;
+      padding: 0;
+    }
+    .swatch-circle {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 2.5px solid transparent;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      transition: all 0.17s;
+    }
+    .metal-swatch:hover .swatch-circle { transform: scale(1.09); }
+    .metal-swatch.active .swatch-circle {
+      border-color: #C8A84A;
+      box-shadow: 0 0 0 3px rgba(200,168,74,0.30), 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .sw-yellow { background: linear-gradient(135deg, #F6D458 0%, #C8940C 60%, #EAC040 100%); }
+    .sw-white  { background: linear-gradient(135deg, #F2F2F2 0%, #BEBEBE 60%, #E0E0E0 100%); }
+    .sw-rose   { background: linear-gradient(135deg, #EAA898 0%, #C06858 60%, #D88878 100%); }
+    .swatch-label { font-size: 10px; color: #555; letter-spacing: 0.03em; white-space: nowrap; }
+    .metal-swatch.active .swatch-label { color: #C8A84A; font-weight: 600; }
+
+    /* ── GEM SWATCHES ── */
+    .gem-swatches { display: flex; gap: 14px; flex-wrap: wrap; }
+    .gem-swatch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font: inherit;
+      padding: 0;
+    }
+    .gem-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 2px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      transition: all 0.17s;
+      clip-path: polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%);
+    }
+    .gem-swatch:hover .gem-icon  { transform: scale(1.1); }
+    .gem-swatch.active .gem-icon {
+      outline: 2.5px solid #C8A84A;
+      outline-offset: 3px;
+    }
+    .gi-diamond  { background: linear-gradient(135deg, #FFFFFF 0%, #D8ECF8 50%, #B8D4F0 100%); }
+    .gi-sapphire { background: linear-gradient(135deg, #5888DC 0%, #1A3A8C 60%, #2A54A8 100%); }
+    .gi-ruby     { background: linear-gradient(135deg, #E84068 0%, #8C1028 60%, #C03050 100%); }
+    .gi-emerald  { background: linear-gradient(135deg, #48B870 0%, #0C5E2C 60%, #1E7840 100%); }
+    .gem-label { font-size: 10px; color: #555; letter-spacing: 0.03em; }
+    .gem-swatch.active .gem-label { color: #C8A84A; font-weight: 600; }
+
+    /* ── RESPONSIVE ── */
+    /* Make SVG icons visible on dark cards */
+    .style-card svg, .shape-card svg { filter: brightness(1.8); }
+    .style-card.active svg, .shape-card.active svg { filter: brightness(2.4) sepia(0.4) hue-rotate(5deg); }
+
+    @media (max-width: 680px) {
+      html, body { overflow: auto; }
+      .app  { height: auto; }
+      .main { flex-direction: column; }
+      .viewer-wrap { height: 58vw; min-height: 240px; }
+      .sidebar { width: 100%; border-left: none; border-top: 1px solid #1E1E1E; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── HEADER ── -->
+  <header class="header">
+    <span class="header-brand">Ring Studio</span>
+    <div class="header-sep"></div>
+    <span class="header-sub">Design Your Own Ring</span>
+  </header>
+
+  <div class="main">
+
+    <!-- ── 3D VIEWER ── -->
+    <div class="viewer-wrap">
+      <div id="viewer"></div>
+
+      <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="cam-btns">
+        <button class="cam-btn" data-cam="front">Front</button>
+        <button class="cam-btn" data-cam="angle">Angle</button>
+        <button class="cam-btn" data-cam="top">Top</button>
+      </div>
+    </div>
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+
+      <!-- Ring Style -->
+      <div class="section">
+        <div class="section-title">Ring Style</div>
+        <div class="style-grid">
+
+          <button class="style-card active" data-head="Head_1.glb">
+            <svg viewBox="0 0 56 30" fill="none" stroke="#9A8570" stroke-width="1.4" stroke-linecap="round">
+              <path d="M4,27 Q4,7 28,5 Q52,7 52,27"/>
+              <path d="M20,5 L28,1 L36,5"/>
+              <circle cx="28" cy="2" r="2.5" fill="#B8963E" stroke="none"/>
+            </svg>
+            <span>Classic</span>
+          </button>
+
+          <button class="style-card" data-head="Head_2.glb">
+            <svg viewBox="0 0 56 30" fill="none" stroke="#9A8570" stroke-width="1.4" stroke-linecap="round">
+              <path d="M4,27 Q4,7 28,5 Q52,7 52,27"/>
+              <path d="M9,17 Q9,9 28,7 Q47,9 47,17"/>
+              <path d="M20,5 L28,1 L36,5"/>
+              <circle cx="28" cy="2" r="2.5" fill="#B8963E" stroke="none"/>
+              <circle cx="13" cy="13" r="1.2" fill="#9A8570"/>
+              <circle cx="22" cy="9"  r="1.2" fill="#9A8570"/>
+              <circle cx="34" cy="9"  r="1.2" fill="#9A8570"/>
+              <circle cx="43" cy="13" r="1.2" fill="#9A8570"/>
+            </svg>
+            <span>Pavé</span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Stone Shape -->
+      <div class="section">
+        <div class="section-title">Stone Shape</div>
+        <div class="shape-grid">
+
+          <button class="shape-card active" data-stone="Top_Round.glb">
+            <svg viewBox="0 0 48 48" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4">
+              <circle cx="24" cy="24" r="17"/>
+              <circle cx="24" cy="24" r="9" stroke="#C8AA7A" stroke-dasharray="2.5 3" stroke-width="1" fill="none" opacity="0.6"/>
+            </svg>
+            <span>Round</span>
+          </button>
+
+          <button class="shape-card" data-stone="Top_Oval.glb">
+            <svg viewBox="0 0 48 48" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4">
+              <ellipse cx="24" cy="24" rx="13" ry="18"/>
+              <ellipse cx="24" cy="24" rx="7" ry="10" stroke="#C8AA7A" stroke-dasharray="2.5 3" stroke-width="1" fill="none" opacity="0.6"/>
+            </svg>
+            <span>Oval</span>
+          </button>
+
+          <button class="shape-card" data-stone="Top_Heart.glb">
+            <svg viewBox="0 0 48 48" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4">
+              <path d="M24,38 C24,38 7,27 7,17 C7,11 11.5,7 17,9 C20,10 22.5,12.5 24,15 C25.5,12.5 28,10 31,9 C36.5,7 41,11 41,17 C41,27 24,38 24,38 Z"/>
+            </svg>
+            <span>Heart</span>
+          </button>
+
+          <button class="shape-card" data-stone="Top_Marquise.glb">
+            <svg viewBox="0 0 48 48" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4">
+              <path d="M24,5 Q40,24 24,43 Q8,24 24,5 Z"/>
+              <path d="M24,12 Q35,24 24,36 Q13,24 24,12 Z" stroke="#C8AA7A" stroke-dasharray="2.5 3" stroke-width="1" fill="none" opacity="0.6"/>
+            </svg>
+            <span>Marquise</span>
+          </button>
+
+          <button class="shape-card" data-stone="Top_Asscher.glb">
+            <svg viewBox="0 0 48 48" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4">
+              <!-- Asscher: square with cropped corners -->
+              <path d="M16,8 L32,8 L40,16 L40,32 L32,40 L16,40 L8,32 L8,16 Z"/>
+              <path d="M18,13 L30,13 L35,18 L35,30 L30,35 L18,35 L13,30 L13,18 Z" stroke="#C8AA7A" stroke-dasharray="2.5 3" stroke-width="1" fill="none" opacity="0.6"/>
+            </svg>
+            <span>Asscher</span>
+          </button>
+
+          <button class="shape-card" data-stone="Top_Ractangle.glb">
+            <svg viewBox="0 0 48 48" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4">
+              <rect x="11" y="8" width="26" height="32" rx="3.5"/>
+              <rect x="16" y="13" width="16" height="22" rx="2" stroke="#C8AA7A" stroke-dasharray="2.5 3" stroke-width="1" fill="none" opacity="0.6"/>
+            </svg>
+            <span>Rectangle</span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Metal -->
+      <div class="section">
+        <div class="section-title">Metal</div>
+        <div class="swatch-row">
+          <button class="metal-swatch active" data-metal="yellow">
+            <div class="swatch-circle sw-yellow"></div>
+            <span class="swatch-label">Yellow Gold</span>
+          </button>
+          <button class="metal-swatch" data-metal="white">
+            <div class="swatch-circle sw-white"></div>
+            <span class="swatch-label">White Gold</span>
+          </button>
+          <button class="metal-swatch" data-metal="rose">
+            <div class="swatch-circle sw-rose"></div>
+            <span class="swatch-label">Rose Gold</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stone Color -->
+      <div class="section">
+        <div class="section-title">Stone</div>
+        <div class="gem-swatches">
+          <button class="gem-swatch active" data-gem="diamond">
+            <div class="gem-icon gi-diamond"></div>
+            <span class="gem-label">Diamond</span>
+          </button>
+          <button class="gem-swatch" data-gem="sapphire">
+            <div class="gem-icon gi-sapphire"></div>
+            <span class="gem-label">Sapphire</span>
+          </button>
+          <button class="gem-swatch" data-gem="ruby">
+            <div class="gem-icon gi-ruby"></div>
+            <span class="gem-label">Ruby</span>
+          </button>
+          <button class="gem-swatch" data-gem="emerald">
+            <div class="gem-icon gi-emerald"></div>
+            <span class="gem-label">Emerald</span>
+          </button>
+        </div>
+      </div>
+
+    </aside><!-- end sidebar -->
+  </div><!-- end main -->
+</div><!-- end app -->
+
+<!-- Three.js (ES modules via importmap) -->
+<script type="importmap">
+{
+  "imports": {
+    "three":          "https://unpkg.com/three@0.163.0/build/three.module.js",
+    "three/addons/":  "https://unpkg.com/three@0.163.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls }   from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ─── CONFIG ─── */
+const BASE = 'models/';
+
+// All loaded models are normalised to this world-space diameter.
+// Camera presets are calibrated for this exact size — never needs changing.
+const TARGET_SIZE = 0.50;
+
+const METALS = {
+  yellow: { color: 0xF5C030, metalness: 0.92, roughness: 0.14 },
+  white:  { color: 0xE8E8E8, metalness: 0.92, roughness: 0.12 },
+  rose:   { color: 0xE8907A, metalness: 0.92, roughness: 0.16 },
+};
+
+const GEMS = {
+  diamond:  { color: 0xDDEEFF, transmission: 0.75, roughness: 0.0,  ior: 2.42, thickness: 0.6, dispersion: 2.0 },
+  sapphire: { color: 0x2255CC, transmission: 0.55, roughness: 0.02, ior: 1.77, thickness: 0.6, dispersion: 0.3 },
+  ruby:     { color: 0xCC1530, transmission: 0.50, roughness: 0.02, ior: 1.76, thickness: 0.6, dispersion: 0.3 },
+  emerald:  { color: 0x0D7040, transmission: 0.55, roughness: 0.03, ior: 1.58, thickness: 0.6, dispersion: 0.2 },
+};
+
+// Fixed presets — valid because every model is normalised to TARGET_SIZE
+const CAM_PRESETS = {
+  front: new THREE.Vector3(0.18, 0.22, 1.1),
+  angle: new THREE.Vector3(0.70, 0.45, 0.85),
+  top:   new THREE.Vector3(0.04, 1.20, 0.25),
+};
+
+const LOOK_AT = new THREE.Vector3(0, 0.05, 0);
+
+/* ─── STATE ─── */
+let ringMesh      = null;
+let stoneMesh     = null;
+let modelScale    = 1.0;
+let stoneTargetY  = TARGET_SIZE * 0.28;
+const modelCache  = {};   // preloaded GLTFs keyed by filename
+let currentMetal = 'yellow';
+let currentGem   = 'diamond';
+let camTarget    = null;
+let autoTimer    = null;
+let pendingLoads = 0;
+
+/* ─── RENDERER ─── */
+const container = document.getElementById('viewer');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.4;
+renderer.shadowMap.enabled = false;
+container.appendChild(renderer.domElement);
+
+/* ─── SCENE ─── */
+const scene = new THREE.Scene();
+// background left null → CSS gradient shows through (alpha: true)
+
+/* ─── ENVIRONMENT (RoomEnvironment = realistic studio reflections) ─── */
+const pmrem = new THREE.PMREMGenerator(renderer);
+pmrem.compileEquirectangularShader();
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+pmrem.dispose();
+
+/* ─── CAMERA ─── */
+const camera = new THREE.PerspectiveCamera(
+  30,
+  container.clientWidth / container.clientHeight,
+  0.01,
+  100
+);
+camera.position.copy(CAM_PRESETS.front);
+
+/* ─── ORBIT CONTROLS ─── */
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping  = true;
+controls.dampingFactor  = 0.06;
+controls.target.set(0, 0.05, 0);
+controls.minDistance    = 0.4;
+controls.maxDistance    = 4;
+controls.autoRotate     = true;
+controls.autoRotateSpeed = 1.2;
+
+/* Stop auto-rotate on user interaction, restart after 3 s */
+renderer.domElement.addEventListener('pointerdown', () => {
+  controls.autoRotate = false;
+  clearTimeout(autoTimer);
+  camTarget = null;
+});
+renderer.domElement.addEventListener('pointerup', () => {
+  autoTimer = setTimeout(() => { controls.autoRotate = true; }, 3000);
+});
+
+/* ─── LIGHTS ─── */
+scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+
+const key = new THREE.DirectionalLight(0xFFF8F0, 1.8);
+key.position.set(2, 4, 3);
+scene.add(key);
+
+const fill = new THREE.DirectionalLight(0xF0F4FF, 1.0);
+fill.position.set(-3, 2, 4);
+scene.add(fill);
+
+const rim = new THREE.DirectionalLight(0xFFF8EC, 0.75);
+rim.position.set(0, 3, -4);
+scene.add(rim);
+
+/* ─── CONTACT SHADOW (fake ellipse under ring — no real shadow map needed) ─── */
+const shadowTex = (() => {
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  grad.addColorStop(0,   'rgba(0,0,0,0.10)');
+  grad.addColorStop(0.4, 'rgba(0,0,0,0.04)');
+  grad.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+  const t = new THREE.CanvasTexture(canvas);
+  return t;
+})();
+
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(TARGET_SIZE * 2.2, TARGET_SIZE * 2.2),
+  new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -TARGET_SIZE * 0.26;
+scene.add(ground);
+
+/* ─── LOADER & LOADING STATE ─── */
+const loader    = new GLTFLoader();
+const loadingEl = document.getElementById('loading');
+
+function showLoading() {
+  pendingLoads++;
+  loadingEl.classList.remove('hidden');
+}
+function hideLoading() {
+  if (--pendingLoads <= 0) {
+    pendingLoads = 0;
+    loadingEl.classList.add('hidden');
+  }
+}
+
+/* ─── MODEL NORMALISATION ─── */
+// Scales and centres mesh so its largest axis == TARGET_SIZE (head) or stays
+// proportional to the head (stone). Returns the world-space bounding box
+// AFTER the transform has been applied, so callers can do positional math.
+function normalise(mesh, isHead) {
+  mesh.updateMatrixWorld(true);
+  const box    = new THREE.Box3().setFromObject(mesh);
+  const size   = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+
+  if (isHead) modelScale = maxDim > 0 ? TARGET_SIZE / maxDim : 1;
+
+  mesh.scale.setScalar(modelScale);
+  // Centre the mesh at world origin
+  mesh.position.copy(center.clone().multiplyScalar(-modelScale));
+  mesh.updateMatrixWorld(true);
+
+  // Return updated bounding box so callers can align pieces
+  return new THREE.Box3().setFromObject(mesh);
+}
+
+// Positions the stone so its bottom edge sits at stoneTargetY (top of band).
+function positionStone() {
+  if (!stoneMesh) return;
+  stoneMesh.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(stoneMesh);
+  // Shift stone so its base overlaps slightly into the prong setting
+  stoneMesh.position.y += stoneTargetY - box.min.y - TARGET_SIZE * 0.10;
+}
+
+/* ─── TRANSITION HELPERS ─── */
+
+// Mini tweener: calls onUpdate(value) from `from` to `to` over `ms`, then onDone()
+function tween(from, to, ms, ease, onUpdate, onDone) {
+  const t0 = performance.now();
+  (function step(now) {
+    const p = Math.min((now - t0) / ms, 1);
+    onUpdate(from + (to - from) * ease(p));
+    p < 1 ? requestAnimationFrame(step) : onDone?.();
+  })(t0);
+}
+
+const ease = {
+  inOut:      p => p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2, 2)/2,
+  inCubic:    p => p * p * p,
+  outCubic:   p => 1 - Math.pow(1-p, 3),
+  outQuart:   p => 1 - Math.pow(1-p, 4),
+  outBack:    p => { const c = 1.70158; return 1 + (c+1)*Math.pow(p-1,3) + c*Math.pow(p-1,2); },
+  outElastic: p => p === 0 ? 0 : p === 1 ? 1 :
+                   Math.pow(2,-10*p) * Math.sin((p*10-0.75)*(2*Math.PI/3)) + 1,
+};
+
+// Set opacity on every mesh in an object3D (works for all material types)
+function setOpacity(obj, v) {
+  obj.traverse(c => {
+    if (!c.isMesh) return;
+    const mats = Array.isArray(c.material) ? c.material : [c.material];
+    mats.forEach(m => { m.transparent = true; m.opacity = v; });
+  });
+}
+
+// Fade out: pure opacity — no scale, no position change
+function fadeOut(obj, onDone) {
+  if (!obj) { onDone?.(); return; }
+  tween(1, 0, 250, ease.inOut, v => {
+    setOpacity(obj, v);
+  }, () => { scene.remove(obj); onDone?.(); });
+}
+
+// Fade in: pure opacity — no scale, no position change, no jump
+function fadeIn(obj) {
+  const ts = obj.scale.x;
+  setOpacity(obj, 0);
+  obj.scale.setScalar(ts);
+  scene.add(obj);
+  tween(0, 1, 350, ease.outCubic, v => {
+    setOpacity(obj, v);
+  }, () => {
+    setOpacity(obj, 1);
+    obj.scale.setScalar(ts);
+    obj.traverse(c => {
+      if (!c.isMesh) return;
+      const mats = Array.isArray(c.material) ? c.material : [c.material];
+      mats.forEach(m => {
+        m.opacity = 1;
+        m.transparent = !!(m.transmission > 0 || m.opacity < 1);
+      });
+    });
+  });
+}
+
+// Quick envMap intensity pulse → sparkle flash for instant material changes
+function sparkle(obj, baseIntensity) {
+  if (!obj) return;
+  tween(baseIntensity * 3, baseIntensity, 500, ease.outCubic, v => {
+    obj.traverse(c => { if (c.isMesh) c.material.envMapIntensity = v; });
+  });
+}
+
+/* ─── LOAD RING BAND ─── */
+function loadHead(file) {
+  const old = ringMesh;
+  ringMesh = null;
+  showLoading();
+
+  let fadeDone  = !old;  // skip wait if nothing to fade out
+  let gltfReady = null;
+
+  // Fade out old mesh in parallel with network fetch
+  fadeOut(old, () => { fadeDone = true; reveal(); });
+
+  loader.load(BASE + file, gltf => {
+    gltfReady = gltf;
+    reveal();
+  }, undefined, () => hideLoading());
+
+  function reveal() {
+    if (!fadeDone || !gltfReady) return; // wait for both
+    ringMesh = gltfReady.scene;
+    const m = METALS[currentMetal];
+    const bandBox = normalise(ringMesh, true);
+    // Lift band so its bottom sits on the ground plane
+    ringMesh.position.y -= bandBox.min.y * 0; // already centred; just keep it
+    // Stone should sit at the TOP of the band
+    stoneTargetY = bandBox.max.y;
+    if (stoneMesh) positionStone(); // re-align if stone already loaded
+    ringMesh.traverse(c => {
+      if (!c.isMesh) return;
+      c.geometry.computeVertexNormals();
+      c.material = new THREE.MeshStandardMaterial({
+        color:           m.color,
+        metalness:       m.metalness,
+        roughness:       m.roughness,
+        envMapIntensity: 2.2,
+      });
+    });
+    fadeIn(ringMesh);
+    hideLoading();
+  }
+}
+
+/* ─── BUILD STONE MESH — scale, material only. Position set after scene.add. ─── */
+function buildStoneMesh(sourceScene) {
+  const mesh = sourceScene.clone(true);
+  normalise(mesh, false);
+
+  // Cap stone size: never larger than 72% of ring diameter
+  mesh.updateMatrixWorld(true);
+  const sb = new THREE.Box3().setFromObject(mesh);
+  const sm = Math.max(...sb.getSize(new THREE.Vector3()).toArray());
+  if (sm > TARGET_SIZE * 0.72) {
+    mesh.scale.multiplyScalar((TARGET_SIZE * 0.72) / sm);
+  }
+
+  const g = GEMS[currentGem];
+  mesh.traverse(c => {
+    if (!c.isMesh) return;
+    c.geometry.computeVertexNormals();
+    c.material = new THREE.MeshPhysicalMaterial({
+      color: g.color, roughness: g.roughness, metalness: 0,
+      transmission: g.transmission, ior: g.ior, thickness: g.thickness,
+      dispersion: g.dispersion, envMapIntensity: 4.0,
+      transparent: true, opacity: 0.96,
+    });
+  });
+  return mesh;
+}
+
+/* ─── CROSS-DISSOLVE ─── */
+// Position is computed AFTER scene.add so world matrix is fully resolved —
+// this eliminates the "white flash then snap" artifact.
+function crossDissolve(oldObj, newObj) {
+  setOpacity(newObj, 0);
+  scene.add(newObj);
+
+  // Now world matrix is valid — compute position here
+  newObj.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(newObj);
+  newObj.position.y += stoneTargetY - box.min.y - TARGET_SIZE * 0.10;
+
+  tween(0, 1, 380, ease.inOut, v => {
+    if (oldObj) setOpacity(oldObj, 1 - v);
+    setOpacity(newObj, v);
+  }, () => {
+    if (oldObj) scene.remove(oldObj);
+    newObj.traverse(c => {
+      if (!c.isMesh) return;
+      const mats = Array.isArray(c.material) ? c.material : [c.material];
+      mats.forEach(m => { m.opacity = 1; m.transparent = m.transmission > 0; });
+    });
+  });
+}
+
+/* ─── LOAD STONE (cache → instant, else network) ─── */
+function loadStone(file) {
+  const old = stoneMesh;
+  stoneMesh = null;
+
+  function swap(sourceScene) {
+    stoneMesh = buildStoneMesh(sourceScene);
+    crossDissolve(old, stoneMesh);
+    hideLoading();
+  }
+
+  if (modelCache[file]) {
+    swap(modelCache[file]);
+  } else {
+    showLoading();
+    loader.load(BASE + file, gltf => {
+      modelCache[file] = gltf.scene;
+      swap(gltf.scene);
+    }, undefined, () => hideLoading());
+  }
+}
+
+/* ─── PRELOAD ALL STONE SHAPES in background after first render ─── */
+function preloadStones() {
+  const files = [
+    'Top_Round.glb','Top_Oval.glb','Top_Heart.glb',
+    'Top_Marquise.glb','Top_Asscher.glb','Top_Ractangle.glb'
+  ];
+  files.forEach(f => {
+    if (!modelCache[f]) loader.load(BASE + f, gltf => { modelCache[f] = gltf.scene; });
+  });
+}
+
+/* ─── APPLY METAL — smooth color lerp over 550ms ─── */
+function applyMetal(name) {
+  currentMetal = name;
+  if (!ringMesh) return;
+  const target  = METALS[name];
+  const toColor = new THREE.Color(target.color);
+
+  // Snapshot each mesh's start values before the tween runs
+  const states = [];
+  ringMesh.traverse(c => {
+    if (!c.isMesh) return;
+    states.push({
+      mat:       c.material,
+      fromColor: c.material.color.clone(),
+      fromMetal: c.material.metalness,
+      fromRough: c.material.roughness,
+    });
+  });
+
+  tween(0, 1, 550, ease.inOut, v => {
+    states.forEach(({ mat, fromColor, fromMetal, fromRough }) => {
+      mat.color.lerpColors(fromColor, toColor, v);
+      mat.metalness = fromMetal + (target.metalness - fromMetal) * v;
+      mat.roughness = fromRough + (target.roughness - fromRough) * v;
+    });
+  });
+}
+
+/* ─── APPLY GEM COLOR (no reload — sparkle flash) ─── */
+function applyGem(name) {
+  currentGem = name;
+  const g = GEMS[name];
+  if (!stoneMesh) return;
+  stoneMesh.traverse(c => {
+    if (!c.isMesh) return;
+    c.material.color.setHex(g.color);
+    c.material.transmission = g.transmission;
+    c.material.roughness    = g.roughness;
+    c.material.ior          = g.ior;
+    c.material.dispersion   = g.dispersion;
+  });
+  sparkle(stoneMesh, 4.0);
+}
+
+/* ─── UI ACTIVE STATE ─── */
+function setActive(btn, selector) {
+  document.querySelectorAll(selector).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+document.querySelectorAll('[data-head]').forEach(btn =>
+  btn.addEventListener('click', () => { setActive(btn, '[data-head]'); loadHead(btn.dataset.head); })
+);
+document.querySelectorAll('[data-stone]').forEach(btn =>
+  btn.addEventListener('click', () => { setActive(btn, '[data-stone]'); loadStone(btn.dataset.stone); })
+);
+document.querySelectorAll('[data-metal]').forEach(btn =>
+  btn.addEventListener('click', () => { setActive(btn, '[data-metal]'); applyMetal(btn.dataset.metal); })
+);
+document.querySelectorAll('[data-gem]').forEach(btn =>
+  btn.addEventListener('click', () => { setActive(btn, '[data-gem]'); applyGem(btn.dataset.gem); })
+);
+document.querySelectorAll('[data-cam]').forEach(btn =>
+  btn.addEventListener('click', () => {
+    camTarget = CAM_PRESETS[btn.dataset.cam].clone();
+    controls.autoRotate = false;
+    clearTimeout(autoTimer);
+  })
+);
+
+/* ─── INITIAL LOAD ─── */
+loadHead('Head_1.glb');
+loadStone('Top_Round.glb');
+// Preload remaining stones in background so all shape switches are instant
+setTimeout(preloadStones, 1500);
+
+/* ─── RENDER LOOP ─── */
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (camTarget) {
+    camera.position.lerp(camTarget, 0.07);
+    camera.lookAt(controls.target);
+    if (camera.position.distanceTo(camTarget) < 0.008) {
+      camera.position.copy(camTarget);
+      camTarget = null;
+      autoTimer = setTimeout(() => { controls.autoRotate = true; }, 2000);
+    }
+  }
+  // Always call — reads current camera.position each frame so
+  // OrbitControls' internal spherical stays in sync with the lerp animation.
+  // Without this, clicking mid-animation snaps the camera back.
+  controls.update();
+
+  renderer.render(scene, camera);
+}
+animate();
+
+/* ─── RESIZE ─── */
+window.addEventListener('resize', () => {
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+});
+</script>
+</body>
+</html>

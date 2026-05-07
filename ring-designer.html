@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ring Designer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #F5F1ED;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      height: 52px; background: #1A1A1A;
+      display: flex; align-items: center; padding: 0 22px;
+      flex-shrink: 0; z-index: 20;
+    }
+    .brand     { color: #B8963E; font-size: 16px; letter-spacing: 0.2em; font-weight: 700; text-transform: uppercase; }
+    .brand-sep { width: 1px; height: 16px; background: #3A3A3A; margin: 0 14px; }
+    .brand-sub { color: #777; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+    /* ── LAYOUT ── */
+    .app  { display: flex; flex-direction: column; height: 100vh; }
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── VIEWER ── */
+    .viewer-wrap {
+      flex: 1; position: relative;
+      background: radial-gradient(ellipse at 50% 40%, #FFFFFF 0%, #EDE7DF 100%);
+    }
+    #viewer { width: 100%; height: 100%; }
+
+    /* ── LOADING ── */
+    .loading {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(245,241,237,0.78); backdrop-filter: blur(2px);
+      z-index: 10; transition: opacity 0.3s;
+    }
+    .loading.hidden { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #DDD6CE; border-top-color: #B8963E;
+      border-radius: 50%; animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── CAM BUTTONS ── */
+    .cam-btns {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 7px; z-index: 5;
+    }
+    .cam-btn {
+      padding: 5px 13px; border: 1px solid rgba(200,190,180,0.7);
+      background: rgba(255,255,255,0.9); backdrop-filter: blur(4px);
+      border-radius: 20px; font-size: 11px; letter-spacing: 0.06em;
+      cursor: pointer; color: #666; transition: all 0.15s; text-transform: uppercase;
+    }
+    .cam-btn:hover { color: #B8963E; border-color: #B8963E; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 300px; background: #fff;
+      border-left: 1px solid #EAE4DC;
+      overflow-y: auto; flex-shrink: 0;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #E0D8D0; border-radius: 4px; }
+
+    /* ── SECTION ── */
+    .sec { padding: 16px 18px 14px; border-bottom: 1px solid #F2EDE6; }
+    .sec-title {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: #9A8570; margin-bottom: 12px;
+    }
+
+    /* ── COLOR ROW ── */
+    .color-row  { display: flex; gap: 18px; }
+    .color-group { flex: 1; }
+    .color-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #B0A090; margin-bottom: 8px;
+    }
+    .swatch-row { display: flex; gap: 8px; }
+    .swatch {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 2.5px solid transparent;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      cursor: pointer; transition: all 0.16s; padding: 0;
+    }
+    .swatch:hover { transform: scale(1.1); }
+    .swatch.active {
+      border-color: #B8963E;
+      box-shadow: 0 0 0 3px rgba(184,150,62,0.2), 0 2px 6px rgba(0,0,0,0.18);
+    }
+    .sw-w { background: linear-gradient(135deg, #F0F0F0, #B8B8B8 60%, #DCDCDC); }
+    .sw-y { background: linear-gradient(135deg, #F6D458, #C8940C 60%, #EAC040); }
+    .sw-r { background: linear-gradient(135deg, #EAA898, #C06858 60%, #D88878); }
+
+    /* ── STONE SHAPE GRID ── */
+    .shape-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .shape-card {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 9px 5px 7px; border: 1.5px solid #E8E2D8;
+      border-radius: 9px; background: #FAFAF8;
+      cursor: pointer; transition: all 0.16s; gap: 5px; font: inherit;
+    }
+    .shape-card:hover  { border-color: #C8AA7A; background: #FDF9F3; }
+    .shape-card.active { border-color: #B8963E; background: #FDF5E8; }
+    .shape-card svg    { width: 36px; height: 36px; }
+    .shape-card span   { font-size: 10px; color: #777; letter-spacing: 0.04em; }
+    .shape-card.active span { color: #B8963E; font-weight: 600; }
+
+    /* ── MOUNTING GRID ── */
+    .mount-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .mount-card {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 10px 8px 8px; border: 1.5px solid #E8E2D8;
+      border-radius: 9px; background: #FAFAF8;
+      cursor: pointer; transition: all 0.16s; gap: 5px; font: inherit; text-align: center;
+    }
+    .mount-card:hover  { border-color: #C8AA7A; background: #FDF9F3; }
+    .mount-card.active { border-color: #B8963E; background: #FDF5E8; }
+    .mount-card svg    { width: 48px; height: 26px; opacity: 0.55; }
+    .mount-card.active svg { opacity: 0.9; }
+    .mount-name { font-size: 10px; color: #666; line-height: 1.3; }
+    .mount-card.active .mount-name { color: #B8963E; font-weight: 600; }
+    .mount-code { font-size: 9px; color: #B0A890; letter-spacing: 0.04em; }
+
+    @media (max-width: 700px) {
+      html, body { overflow: auto; }
+      .app  { height: auto; }
+      .main { flex-direction: column; }
+      .viewer-wrap { height: 60vw; min-height: 240px; }
+      .sidebar { width: 100%; border-left: none; border-top: 1px solid #EAE4DC; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <header class="header">
+    <span class="brand">Ring Studio</span>
+    <div class="brand-sep"></div>
+    <span class="brand-sub">Design Your Own Ring</span>
+  </header>
+
+  <div class="main">
+
+    <!-- 3D VIEWER -->
+    <div class="viewer-wrap">
+      <div id="viewer"></div>
+      <div id="loading" class="loading"><div class="spinner"></div></div>
+
+
+      <div class="cam-btns">
+        <button class="cam-btn" data-cam="front">Front</button>
+        <button class="cam-btn" data-cam="angle">Angle</button>
+        <button class="cam-btn" data-cam="top">Top</button>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <!-- Metal Color -->
+      <div class="sec">
+        <div class="sec-title">Metal Color</div>
+        <div class="color-row">
+          <div class="color-group">
+            <div class="color-label">Head</div>
+            <div class="swatch-row">
+              <button class="swatch sw-w active" data-hc="white"  title="White Gold"></button>
+              <button class="swatch sw-y"        data-hc="yellow" title="Yellow Gold"></button>
+              <button class="swatch sw-r"        data-hc="rose"   title="Rose Gold"></button>
+            </div>
+          </div>
+          <div class="color-group">
+            <div class="color-label">Mounting</div>
+            <div class="swatch-row">
+              <button class="swatch sw-w active" data-mc="white"  title="White Gold"></button>
+              <button class="swatch sw-y"        data-mc="yellow" title="Yellow Gold"></button>
+              <button class="swatch sw-r"        data-mc="rose"   title="Rose Gold"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stone Shape -->
+      <div class="sec">
+        <div class="sec-title">Center Stone Shape</div>
+        <div class="shape-grid" id="shape-grid"></div>
+      </div>
+
+      <!-- Mounting -->
+      <div class="sec">
+        <div class="sec-title">Mounting</div>
+        <div class="mount-grid" id="mount-grid"></div>
+      </div>
+
+    </aside>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three":         "https://unpkg.com/three@0.163.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.163.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls }   from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader }     from 'three/addons/loaders/DRACOLoader.js';
+import { RGBELoader }      from 'three/addons/loaders/RGBELoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+// ═══════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════
+const HEAD_BASE  = 'files/Heads/';
+const SHANK_BASE = 'files/Shanks/';
+const TARGET_SIZE = 0.50;
+
+// Exact colors from 3D Jewelry Viewer source: metalness=1, roughness=0
+const METALS = {
+  white:  { color: 0xE8E8E8, metalness: 1, roughness: 0.08 },  // silver / white gold
+  yellow: { color: 0xFFD989, metalness: 1, roughness: 0.06 },  // gold
+  rose:   { color: 0xFFBBAA, metalness: 1, roughness: 0.07 },  // rose gold
+};
+
+// Diamond material — balanced transmission so it looks like crystal not white fog
+const GEM = { color: 0xDDEEFF, transmission: 0.80, roughness: 0.0, ior: 2.42, thickness: 3.0, dispersion: 3.5 };
+
+const CAM_PRESETS = {
+  front: new THREE.Vector3(0.18, 0.22, 1.1),
+  angle: new THREE.Vector3(0.70, 0.45, 0.85),
+  top:   new THREE.Vector3(0.04, 1.20, 0.25),
+};
+
+const HEADS_DATA = [
+  { code:'RD', label:'Round',    file:'RD-100.glb',
+    svg:`<circle cx="18" cy="18" r="14" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4"/>
+         <circle cx="18" cy="18" r="7" stroke="#C8AA7A" stroke-dasharray="2 2.5" stroke-width="1" fill="none" opacity=".6"/>` },
+  { code:'OV', label:'Oval',     file:'OV-100.glb',
+    svg:`<ellipse cx="18" cy="18" rx="10" ry="14" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4"/>
+         <ellipse cx="18" cy="18" rx="5.5" ry="8" stroke="#C8AA7A" stroke-dasharray="2 2.5" stroke-width="1" fill="none" opacity=".6"/>` },
+  { code:'MQ', label:'Marquise', file:'MQ-100.glb',
+    svg:`<path d="M18 3 Q28 18 18 33 Q8 18 18 3Z" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4"/>
+         <path d="M18 9 Q25 18 18 27 Q11 18 18 9Z" stroke="#C8AA7A" stroke-dasharray="2 2.5" stroke-width="1" fill="none" opacity=".6"/>` },
+  { code:'EC', label:'Emerald',  file:'EC-100.glb',
+    svg:`<rect x="7" y="5" width="22" height="26" rx="3" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4"/>
+         <rect x="11" y="9" width="14" height="18" rx="2" stroke="#C8AA7A" stroke-dasharray="2 2.5" stroke-width="1" fill="none" opacity=".6"/>` },
+  { code:'PR', label:'Princess', file:'PR-100.glb',
+    svg:`<rect x="6" y="6" width="24" height="24" rx="1.5" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4"/>
+         <rect x="11" y="11" width="14" height="14" rx="1" stroke="#C8AA7A" stroke-dasharray="2 2.5" stroke-width="1" fill="none" opacity=".6"/>` },
+  { code:'PS', label:'Pear',     file:'PS-100.glb',
+    svg:`<path d="M18 5 C18 5 29 15 29 23 C29 29 24 33 18 33 C12 33 7 29 7 23 C7 15 18 5 18 5Z" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4"/>` },
+];
+
+// headY: fine-tune head vertical offset per shank (positive = raise, negative = lower)
+// Adjust these if a specific shank still shows a gap or the head sinks too deep.
+const SHANKS_DATA = [
+  { code:'SP1001', name:'Vintage Elegance', file:'SP1001-075.glb', headY:  0.00 },
+  { code:'SP1002', name:'Chic Brilliance',  file:'SP1002-075.glb', headY:  0.00 },
+  { code:'SP1003', name:'Splendid Divide',  file:'SP1003-075.glb', headY:  0.00 },
+  { code:'SP1004', name:'Sleek Harmony',    file:'SP1004-075.glb', headY:  0.00 },
+  { code:'SP1005', name:'Tapered Grace',    file:'SP1005-075.glb', headY: -0.10 },
+  // Add more: { code:'SP1006', name:'...', file:'SP1006-075.glb', headY: 0.00 },
+];
+
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+let shankMesh      = null;
+let headMesh       = null;
+let modelScale     = 1.0;
+let stoneTargetY   = TARGET_SIZE * 0.28;
+let activeShank    = SHANKS_DATA[0];
+let camTarget      = null;
+let autoTimer      = null;
+let pendingLoads   = 0;
+const modelCache   = {};
+let currentHeadColor  = 'white';
+let currentMountColor = 'white';
+
+// ═══════════════════════════════════════════════════
+//  RENDERER
+// ═══════════════════════════════════════════════════
+const container = document.getElementById('viewer');
+const renderer  = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.6;
+container.appendChild(renderer.domElement);
+
+// ═══════════════════════════════════════════════════
+//  SCENE + ENV
+// ═══════════════════════════════════════════════════
+const scene = new THREE.Scene();
+// Warm off-white background — matches CSS so seams invisible,
+// AND gives gem transmission something realistic to refract (not pure white)
+scene.background = new THREE.Color(0xF5F1ED);
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+pmrem.compileEquirectangularShader();
+
+// Start with RoomEnvironment immediately so ring renders on load
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 2;
+
+// Then upgrade to proper jewelry studio HDRI (free Poly Haven CC0)
+new RGBELoader().load(
+  'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr',
+  tex => {
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    scene.environment = pmrem.fromEquirectangular(tex).texture;
+    scene.environmentIntensity = 2;
+    tex.dispose();
+    pmrem.dispose();
+  }
+);
+
+// ═══════════════════════════════════════════════════
+//  CAMERA + CONTROLS
+// ═══════════════════════════════════════════════════
+const camera = new THREE.PerspectiveCamera(30, container.clientWidth / container.clientHeight, 0.01, 100);
+camera.position.copy(CAM_PRESETS.front);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping  = true;
+controls.dampingFactor  = 0.06;
+controls.target.set(0, 0.05, 0);
+controls.minDistance    = 0.4;
+controls.maxDistance    = 4;
+controls.autoRotate     = true;
+controls.autoRotateSpeed = 1.2;
+
+renderer.domElement.addEventListener('pointerdown', () => {
+  controls.autoRotate = false; clearTimeout(autoTimer); camTarget = null;
+});
+renderer.domElement.addEventListener('pointerup', () => {
+  autoTimer = setTimeout(() => { controls.autoRotate = true; }, 3000);
+});
+
+// ═══════════════════════════════════════════════════
+//  LIGHTS
+// ═══════════════════════════════════════════════════
+scene.add(new THREE.AmbientLight(0xffffff, 0.50));
+const key  = new THREE.DirectionalLight(0xFFF8F0, 1.8); key.position.set(2, 4, 3);    scene.add(key);
+const fill = new THREE.DirectionalLight(0xF0F4FF, 1.0); fill.position.set(-3, 2, 4);  scene.add(fill);
+const rim  = new THREE.DirectionalLight(0xFFF8EC, 0.75); rim.position.set(0, 3, -4);  scene.add(rim);
+const bot  = new THREE.DirectionalLight(0xE8EEFF, 0.40); bot.position.set(0, -3, 2);  scene.add(bot);
+
+// ═══════════════════════════════════════════════════
+//  CONTACT SHADOW
+// ═══════════════════════════════════════════════════
+const shadowTex = (() => {
+  const s = 128, c = document.createElement('canvas');
+  c.width = c.height = s;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
+  g.addColorStop(0,   'rgba(0,0,0,0.10)');
+  g.addColorStop(0.4, 'rgba(0,0,0,0.04)');
+  g.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, s, s);
+  return new THREE.CanvasTexture(c);
+})();
+const gnd = new THREE.Mesh(
+  new THREE.PlaneGeometry(TARGET_SIZE * 2.2, TARGET_SIZE * 2.2),
+  new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false })
+);
+gnd.rotation.x = -Math.PI / 2;
+gnd.position.y = -TARGET_SIZE * 0.26;
+scene.add(gnd);
+
+// ═══════════════════════════════════════════════════
+//  LOADER
+// ═══════════════════════════════════════════════════
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://unpkg.com/three@0.163.0/examples/jsm/libs/draco/');
+
+const loader = new GLTFLoader();
+loader.setDRACOLoader(dracoLoader);
+
+const loadingEl = document.getElementById('loading');
+
+function showLoading() { pendingLoads++; loadingEl.classList.remove('hidden'); }
+function hideLoading() { if (--pendingLoads <= 0) { pendingLoads = 0; loadingEl.classList.add('hidden'); } }
+
+// ═══════════════════════════════════════════════════
+//  TRANSITION
+// ═══════════════════════════════════════════════════
+function tween(from, to, ms, ease, onUpdate, onDone) {
+  const t0 = performance.now();
+  (function step(now) {
+    const p = Math.min((now - t0) / ms, 1);
+    onUpdate(from + (to - from) * ease(p));
+    p < 1 ? requestAnimationFrame(step) : onDone?.();
+  })(t0);
+}
+const easeInOut = p => p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2, 2)/2;
+
+function setOpacity(obj, v) {
+  obj.traverse(c => {
+    if (!c.isMesh) return;
+    (Array.isArray(c.material) ? c.material : [c.material])
+      .forEach(m => { m.transparent = true; m.opacity = v; });
+  });
+}
+
+function crossDissolve(oldObj, newObj) {
+  setOpacity(newObj, 0);
+  scene.add(newObj);
+  newObj.updateMatrixWorld(true);
+  tween(0, 1, 380, easeInOut, v => {
+    if (oldObj) setOpacity(oldObj, 1 - v);
+    setOpacity(newObj, v);
+  }, () => {
+    if (oldObj) scene.remove(oldObj);
+    newObj.traverse(c => {
+      if (!c.isMesh) return;
+      (Array.isArray(c.material) ? c.material : [c.material])
+        .forEach(m => { m.opacity = 1; m.transparent = m.transmission > 0; });
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  NORMALISE
+// ═══════════════════════════════════════════════════
+function normalise(mesh, isShank) {
+  mesh.updateMatrixWorld(true);
+  const box    = new THREE.Box3().setFromObject(mesh);
+  const size   = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+
+  if (isShank) {
+    modelScale = maxDim > 0 ? TARGET_SIZE / maxDim : 1;
+  } else {
+    // Store original geometry dims so we can rescale if modelScale changes later
+    mesh._geomMaxDim = maxDim;
+    mesh._geomCenter = center.clone();
+  }
+
+  mesh.scale.setScalar(modelScale);
+  mesh.position.copy(center.clone().multiplyScalar(-modelScale));
+  mesh.updateMatrixWorld(true);
+  return new THREE.Box3().setFromObject(mesh);
+}
+
+// Rescale head to match current modelScale (called after shank loads/changes)
+function rescaleHead() {
+  if (!headMesh || !headMesh._geomMaxDim) return;
+  let s = modelScale;
+  const scaledMax = headMesh._geomMaxDim * s;
+  if (scaledMax > TARGET_SIZE * 0.72) s *= (TARGET_SIZE * 0.72) / scaledMax;
+  headMesh.scale.setScalar(s);
+  if (headMesh._geomCenter) {
+    headMesh.position.copy(headMesh._geomCenter.clone().multiplyScalar(-s));
+  }
+  headMesh.position.y = 0;
+  positionHead();
+}
+
+function positionHead() {
+  if (!headMesh) return;
+  headMesh.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(headMesh);
+  headMesh.position.y += stoneTargetY - box.min.y - TARGET_SIZE * 0.15 + (activeShank?.headY ?? 0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GEM RAY-TRACER  — exact iJewel3D / 3D Jewelry Viewer approach
+//  Step 1: bake gem interior face-normals into a 256px CubeMap once
+//  Step 2: GLSL shader traces 4 light bounces per pixel with chromatic
+//          dispersion using the EXACT procedural env from iJewel3D source
+// ═══════════════════════════════════════════════════════════════
+function buildGemMaterial(geometry) {
+  // ── centre & measure gem ──
+  const geo = geometry.clone();
+  const tmpBox = new THREE.Box3().setFromBufferAttribute(geo.attributes.position);
+  const ctr = tmpBox.getCenter(new THREE.Vector3());
+  geo.applyMatrix4(new THREE.Matrix4().makeTranslation(-ctr.x, -ctr.y, -ctr.z));
+
+  const pos = geo.attributes.position.array;
+  let minR = Infinity, maxR = 0;
+  for (let i = 0; i < pos.length; i += 3) {
+    const d = Math.sqrt(pos[i]*pos[i] + pos[i+1]*pos[i+1] + pos[i+2]*pos[i+2]);
+    if (d < minR) minR = d;
+    if (d > maxR) maxR = d;
+  }
+  if (!isFinite(minR) || minR <= 0) minR = maxR * 0.4;
+
+  // ── bake interior cube map (face normal + depth per texel) ──
+  const cubeRT = new THREE.WebGLCubeRenderTarget(256, {
+    minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter,
+    generateMipmaps: false, depthBuffer: false,
+    colorSpace: THREE.LinearSRGBColorSpace,
+  });
+  const bakeMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide, blending: THREE.NoBlending,
+    uniforms: { u0: { value: minR }, u1: { value: maxR } },
+    vertexShader: `varying vec3 vP,vN;
+      void main(){vP=position;vN=normalize(normal);
+        gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1);}`,
+    fragmentShader: `precision mediump float;
+      uniform float u0,u1;varying vec3 vP,vN;
+      void main(){gl_FragColor=vec4(0.5+0.5*normalize(vN),(length(vP)-u0)/(u1-u0));}`,
+  });
+  const bakeScene = new THREE.Scene();
+  bakeScene.add(new THREE.Mesh(geo, bakeMat));
+  new THREE.CubeCamera(minR * 0.01, maxR * 10, cubeRT).update(renderer, bakeScene);
+
+  // ── ray-tracing gem shader ──
+  // Physics note on IOR conventions used below:
+  //   fresnel(i, n, ior): ior = n_transmitted / n_incident
+  //   refract(I, N, eta): eta = n_incident / n_transmitted  (GLSL spec)
+  //   ∴ for gem→air: fresnel uses inv=1/n, refract uses ior=n  (TIR fires when eta>1)
+  //   ∴ for air→gem: fresnel uses n,       refract uses inv=1/n
+  const u = {
+    uEye:    { value: new THREE.Vector3() },
+    uAbsorb: { value: new THREE.Vector3(0.001, 0.001, 0.001) }, // crystal-clear
+    uDisp:   { value: new THREE.Vector3(2.40, 2.42, 2.44) },    // R,G,B IOR — subtle fire
+    uGemMap: { value: cubeRT.texture },
+    uMinR:   { value: minR },
+    uMaxR:   { value: maxR },
+    uCtr:    { value: ctr },
+    uEnvRot: { value: new THREE.Matrix4() },
+  };
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: u,
+    blending: THREE.NoBlending,
+    vertexShader: `
+      varying vec3 vPos, vNor;
+      void main() {
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+        vPos = position;
+        vNor = normalize(normal);
+      }`,
+    fragmentShader: `
+      precision highp float;
+      uniform vec3        uEye, uAbsorb, uDisp, uCtr;
+      uniform float       uMinR, uMaxR;
+      uniform mat4        uEnvRot;
+      uniform samplerCube uGemMap;
+      varying vec3 vPos, vNor;
+
+      // ── Diamond studio environment ──
+      // Two layers: soft area lights give most facets a base brightness,
+      // tight point lights add the crisp sparkle flash on top.
+      vec3 gemEnv(vec3 d) {
+        d = normalize((uEnvRot * vec4(d, 0.0)).xyz);
+
+        // Area lights — low exponent = wide, most facets catch some light
+        float A0 = pow(max(0.0, dot(d, normalize(vec3( 0.0, 1.0, 0.3)))), 3.0) * 0.55;
+        float A1 = pow(max(0.0, dot(d, normalize(vec3( 0.7, 0.7, 0.0)))), 3.0) * 0.35;
+        float A2 = pow(max(0.0, dot(d, normalize(vec3(-0.7, 0.7, 0.1)))), 3.0) * 0.35;
+        float A3 = pow(max(0.0, dot(d, normalize(vec3( 0.0, 0.6,-0.8)))), 4.0) * 0.30;
+
+        // Point sparkle lights — tight exponent = crisp flash on facet alignment
+        float P0 = pow(max(0.0, dot(d, normalize(vec3( 0.30, 1.00, 0.50)))), 120.0) * 5.0;
+        float P1 = pow(max(0.0, dot(d, normalize(vec3(-0.45, 0.90, 0.25)))), 90.0)  * 3.5;
+        float P2 = pow(max(0.0, dot(d, normalize(vec3( 0.00, 1.00, 0.00)))), 220.0) * 7.5;
+        float P3 = pow(max(0.0, dot(d, normalize(vec3( 0.50, 0.80,-0.20)))), 100.0) * 3.0;
+
+        // Soft ceiling + back-wall ambient (not black — diamonds look silvery not charcoal)
+        float amb = 0.30 * max(0.0, d.y) + 0.08 * max(0.0, d.z * 0.5 + 0.5);
+        float area = A0 + A1 + A2 + A3;
+        float pts  = P0 + P1 + P2 + P3;
+
+        // Cool-tinted broad illumination, warm white on sparkle peaks
+        return vec3(0.80, 0.88, 1.00) * (amb + area)
+             + vec3(1.08, 1.02, 0.94) * pts;
+      }
+
+      // ── Fresnel: ior = n_transmitted / n_incident ──
+      float fresnel(vec3 i, vec3 n, float ior) {
+        float cI = abs(dot(i, n));
+        float s2 = (1.0/ior) * (1.0/ior) * (1.0 - cI*cI);
+        if (s2 >= 1.0) return 1.0; // TIR
+        float cT = sqrt(1.0 - s2);
+        float rs  = (cI - ior*cT) / (cI + ior*cT);
+        float rp  = (ior*cT - cI) / (ior*cT + cI);
+        return 0.5 * (rs*rs + rp*rp);
+      }
+
+      // ── Binary-search ray→face hit via baked normal cube map ──
+      float gemHit(vec3 p, vec3 d, out vec3 hn) {
+        float dp    = dot(p, d);
+        float delta = sqrt(max(0.0, dp*dp - dot(p,p) + uMaxR*uMaxR));
+        float t0 = 0.0, t1 = -dp + delta;
+        for (int i = 0; i < 12; i++) {
+          float tm = 0.5*(t0+t1);
+          vec3  pp = p + tm*d;
+          vec4  s  = textureCube(uGemMap, normalize(pp));
+          float r  = mix(uMinR, uMaxR, s.a);
+          vec3  nn = normalize(2.0*s.rgb - 1.0);
+          if (length(pp) > r && dot(d, nn) > 0.0) t1 = tm; else t0 = tm;
+        }
+        float t = 0.5*(t0+t1);
+        vec4 s = textureCube(uGemMap, normalize(p + t*d));
+        hn = normalize(2.0*s.rgb - 1.0);
+        return t;
+      }
+
+      // ── Physically correct internal bounce trace ──
+      // Inside gem hitting a face: gem(ior)→air(1)
+      //   refract eta = n_i/n_t = ior   (GLSL refract returns 0 on TIR when eta>1) ✓
+      //   fresnel ior_param = n_t/n_i = inv                                          ✓
+      vec3 traceChannel(vec3 p, vec3 d, float ior) {
+        float inv  = 1.0 / ior;
+        vec3  col  = vec3(0.0);
+        float w    = 1.0;
+        float dist = 0.0;
+
+        for (int i = 0; i < 8; i++) {
+          vec3  hn;
+          float t  = gemHit(p, d, hn);
+          dist    += t;
+          p       += t * d;
+
+          // bakeMat uses side:BackSide but is a custom ShaderMaterial — Three.js does NOT
+          // auto-flip normals in custom shaders, so hn = front-face (OUTWARD) normal.
+          // -hn = INWARD normal → d·(-hn) < 0 for rays heading toward face ← correct GLSL sign.
+          // eta = ior (n_gem/n_air > 1) → TIR fires when incidence angle > critical angle ~24°
+          vec3  rf  = refract(d, -hn, ior);
+          bool  tir = (dot(rf, rf) < 0.01);
+
+          // gem→air Fresnel: ior_param = n_t/n_i = 1/n_gem = inv
+          float R = tir ? 1.0 : fresnel(d, -hn, inv);
+
+          if (!tir) {
+            col += w * (1.0 - R) * gemEnv(rf) * exp(-uAbsorb * dist);
+          }
+
+          w *= R;
+          d  = reflect(d, -hn);
+          if (w < 0.004) break;
+        }
+        return col + w * gemEnv(d) * exp(-uAbsorb * dist);
+      }
+
+      void main() {
+        vec3 lp  = vPos - uCtr;
+        vec3 eye = normalize(lp - (uEye - uCtr));
+        vec3 n   = normalize(vNor);
+
+        // Entry: air(1)→gem(ior), refract eta=inv, fresnel ior_param=ior
+        vec3 rc = traceChannel(lp, refract(eye, n, 1.0/uDisp.x), uDisp.x);
+        vec3 gc = traceChannel(lp, refract(eye, n, 1.0/uDisp.y), uDisp.y);
+        vec3 bc = traceChannel(lp, refract(eye, n, 1.0/uDisp.z), uDisp.z);
+        vec3 gem = vec3(rc.r, gc.g, bc.b);
+
+        // Entry Fresnel (air→gem): controls transmission vs surface reflection
+        float R_entry = fresnel(eye, n, uDisp.y);
+
+        // Surface reflection: studio lights off the polished facet
+        vec3 spark = gemEnv(reflect(eye, n)) * 2.2;
+
+        gl_FragColor = vec4(gem * (1.0 - R_entry) + spark * R_entry, 1.0);
+      }`,
+  });
+
+  // Update eye position and env rotation each frame
+  mat.onBeforeRender = (rdr, scn, cam, geom, obj) => {
+    obj.updateWorldMatrix(true, false);
+    const invWorld = obj.matrixWorld.clone().invert();
+    u.uEye.value.copy(cam.position).applyMatrix4(invWorld);
+    // Keep virtual lights fixed in world space as camera orbits
+    u.uEnvRot.value.extractRotation(obj.matrixWorld);
+  };
+
+  return mat;
+}
+
+// Tag the single center gem in a head GLB (largest-vertex-count mesh)
+function tagHeadGem(group) {
+  let best = null, maxVerts = 0;
+  group.traverse(c => {
+    if (!c.isMesh) return;
+    const name = (c.name || '').toLowerCase();
+    if (/prong|claw|setting|mount|basket|band|rail|wire/.test(name)) return;
+    if (/gem|stone|diamond|center|crystal/.test(name)) { best = c; maxVerts = Infinity; return; }
+    const v = c.geometry.attributes.position?.count || 0;
+    if (v > maxVerts) { maxVerts = v; best = c; }
+  });
+  if (best) best._isGem = true;
+}
+
+// Tag pavé / accent stones in a shank GLB.
+// Strategy: collect all meshes, find the band (largest), tag everything significantly
+// smaller as gem (pavé stones have far fewer verts than the band mesh).
+function tagShankGems(group) {
+  const meshes = [];
+  group.traverse(c => { if (c.isMesh) meshes.push(c); });
+  if (meshes.length <= 1) return;
+
+  // Name-based detection first
+  let anyNamed = false;
+  for (const c of meshes) {
+    const name = (c.name || '').toLowerCase();
+    if (/gem|stone|diamond|crystal|pave|pavé|accent/.test(name)) { c._isGem = true; anyNamed = true; }
+  }
+  if (anyNamed) return;
+
+  // Fallback: anything < 15% of the largest mesh vertex count = likely a pavé stone
+  const maxV = Math.max(...meshes.map(c => c.geometry.attributes.position?.count || 0));
+  for (const c of meshes) {
+    const v = c.geometry.attributes.position?.count || 0;
+    if (v > 0 && v < maxV * 0.15) c._isGem = true;
+  }
+}
+
+function isGemMesh(c) { return c._isGem === true; }
+
+function applyMaterials(mesh, isShank) {
+  const m = isShank ? METALS[currentMountColor] : METALS[currentHeadColor];
+
+  // Tag gems — pavé accents for shank, center stone for head
+  if (isShank) tagShankGems(mesh);
+  else         tagHeadGem(mesh);
+
+  mesh.traverse(c => {
+    if (!c.isMesh) return;
+    c.geometry.computeVertexNormals();
+
+    if (isGemMesh(c)) {
+      if (!isShank) {
+        // Center stone → full ray-tracing gem shader (iJewel3D approach)
+        c.material = buildGemMaterial(c.geometry);
+      } else {
+        // Pavé accent stones — lightweight crystal material
+        c.material = new THREE.MeshPhysicalMaterial({
+          color: 0xEEF4FF, roughness: 0.0, metalness: 0,
+          transmission: 0.90, ior: 2.42, thickness: 0.3,
+          dispersion: 1.5, specularIntensity: 1.0, reflectivity: 1.0,
+          envMapIntensity: 6.0, transparent: true,
+        });
+      }
+    } else {
+      // Metal
+      c.material = new THREE.MeshPhysicalMaterial({
+        color: m.color, metalness: m.metalness, roughness: m.roughness,
+        envMapIntensity: 7.0,
+        reflectivity: 1.0,
+      });
+    }
+  });
+}
+
+function tweenColor(mesh, targetName, isShank) {
+  const target  = METALS[targetName];
+  const toColor = new THREE.Color(target.color);
+  const states  = [];
+  mesh.traverse(c => {
+    if (!c.isMesh || isGemMesh(c)) return; // skip gems always
+    states.push({ mat: c.material, from: c.material.color.clone() });
+  });
+  tween(0, 1, 500, easeInOut, v => {
+    states.forEach(({ mat, from }) => mat.color.lerpColors(from, toColor, v));
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  LOAD SHANK
+// ═══════════════════════════════════════════════════
+function loadShank(file) {
+  const old = shankMesh; shankMesh = null;
+  activeShank = SHANKS_DATA.find(s => s.file === file) ?? activeShank;
+
+  function swap(src) {
+    const mesh = src.clone(true);
+    const box  = normalise(mesh, true);
+    // 95th-percentile top Y — prong/taper tips skew box.max.y too high for some shanks
+    mesh.updateMatrixWorld(true);
+    const yVals = [];
+    const _v = new THREE.Vector3();
+    mesh.traverse(c => {
+      if (!c.isMesh) return;
+      const pos = c.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        _v.fromBufferAttribute(pos, i).applyMatrix4(c.matrixWorld);
+        yVals.push(_v.y);
+      }
+    });
+    yVals.sort((a, b) => a - b);
+    stoneTargetY = yVals.length ? yVals[Math.floor(yVals.length * 0.95)] : box.max.y;
+    applyMaterials(mesh, true);
+    shankMesh = mesh;
+    crossDissolve(old, mesh);
+    if (headMesh) rescaleHead();
+    hideLoading();
+  }
+
+  if (modelCache[file]) { swap(modelCache[file]); }
+  else {
+    showLoading();
+    loader.load(SHANK_BASE + file, gltf => { modelCache[file] = gltf.scene; swap(gltf.scene); },
+      undefined, () => hideLoading());
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  LOAD HEAD
+// ═══════════════════════════════════════════════════
+function loadHead(file) {
+  const old = headMesh; headMesh = null;
+
+  function swap(src) {
+    const mesh = src.clone(true);
+    normalise(mesh, false);
+
+    // Cap size to 72% of ring
+    mesh.updateMatrixWorld(true);
+    const b = new THREE.Box3().setFromObject(mesh);
+    const mx = Math.max(...b.getSize(new THREE.Vector3()).toArray());
+    if (mx > TARGET_SIZE * 0.72) mesh.scale.multiplyScalar((TARGET_SIZE * 0.72) / mx);
+
+    applyMaterials(mesh, false);
+    headMesh = mesh;
+    crossDissolve(old, mesh);
+    requestAnimationFrame(() => positionHead());
+    hideLoading();
+  }
+
+  if (modelCache[file]) { swap(modelCache[file]); }
+  else {
+    showLoading();
+    loader.load(HEAD_BASE + file, gltf => { modelCache[file] = gltf.scene; swap(gltf.scene); },
+      undefined, () => hideLoading());
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  BUILD UI
+// ═══════════════════════════════════════════════════
+const ringIcon = `<svg viewBox="0 0 48 26" fill="none" stroke="#9A8570" stroke-width="1.3" stroke-linecap="round">
+  <path d="M4,23 Q4,5 24,4 Q44,5 44,23"/>
+  <path d="M18,4 L24,1 L30,4"/>
+  <circle cx="24" cy="1.5" r="2" fill="#B8963E" stroke="none"/>
+</svg>`;
+
+// Stone shapes
+const shapeGrid = document.getElementById('shape-grid');
+HEADS_DATA.forEach((h, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'shape-card' + (i === 0 ? ' active' : '');
+  btn.dataset.file = h.file;
+  btn.innerHTML = `<svg viewBox="0 0 36 36">${h.svg}</svg><span>${h.label}</span>`;
+  shapeGrid.appendChild(btn);
+});
+
+// Mounting styles
+const mountGrid = document.getElementById('mount-grid');
+SHANKS_DATA.forEach((s, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'mount-card' + (i === 0 ? ' active' : '');
+  btn.dataset.file = s.file;
+  btn.innerHTML = `${ringIcon}<span class="mount-name">${s.name}</span><span class="mount-code">${s.code}</span>`;
+  mountGrid.appendChild(btn);
+});
+
+
+// ═══════════════════════════════════════════════════
+//  UI EVENTS
+// ═══════════════════════════════════════════════════
+function setActive(btn, selector) {
+  document.querySelectorAll(selector).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// Head color
+document.querySelectorAll('[data-hc]').forEach(btn =>
+  btn.addEventListener('click', () => {
+    setActive(btn, '[data-hc]');
+    currentHeadColor = btn.dataset.hc;
+    if (headMesh) tweenColor(headMesh, btn.dataset.hc, false);
+  })
+);
+// Mount color
+document.querySelectorAll('[data-mc]').forEach(btn =>
+  btn.addEventListener('click', () => {
+    setActive(btn, '[data-mc]');
+    currentMountColor = btn.dataset.mc;
+    if (shankMesh) tweenColor(shankMesh, btn.dataset.mc, true);
+  })
+);
+
+shapeGrid.addEventListener('click', e => {
+  const card = e.target.closest('[data-file]');
+  if (!card) return;
+  setActive(card, '#shape-grid [data-file]');
+  loadHead(card.dataset.file);
+});
+
+mountGrid.addEventListener('click', e => {
+  const card = e.target.closest('[data-file]');
+  if (!card) return;
+  setActive(card, '#mount-grid [data-file]');
+  loadShank(card.dataset.file);
+});
+
+document.querySelectorAll('[data-cam]').forEach(btn =>
+  btn.addEventListener('click', () => {
+    camTarget = CAM_PRESETS[btn.dataset.cam].clone();
+    controls.autoRotate = false; clearTimeout(autoTimer);
+  })
+);
+
+// ═══════════════════════════════════════════════════
+//  PRELOAD (background, after first render)
+// ═══════════════════════════════════════════════════
+function preloadAll() {
+  HEADS_DATA.forEach(h => {
+    if (!modelCache[h.file]) loader.load(HEAD_BASE + h.file, gltf => { modelCache[h.file] = gltf.scene; });
+  });
+  SHANKS_DATA.forEach(s => {
+    if (!modelCache[s.file]) loader.load(SHANK_BASE + s.file, gltf => { modelCache[s.file] = gltf.scene; });
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  INITIAL LOAD
+// ═══════════════════════════════════════════════════
+loadShank('SP1001-075.glb');
+loadHead('RD-100.glb');
+setTimeout(preloadAll, 2000);
+
+// ═══════════════════════════════════════════════════
+//  RENDER LOOP
+// ═══════════════════════════════════════════════════
+function animate() {
+  requestAnimationFrame(animate);
+  if (camTarget) {
+    camera.position.lerp(camTarget, 0.07);
+    camera.lookAt(controls.target);
+    if (camera.position.distanceTo(camTarget) < 0.008) {
+      camera.position.copy(camTarget); camTarget = null;
+      autoTimer = setTimeout(() => { controls.autoRotate = true; }, 2000);
+    }
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  const w = container.clientWidth, h = container.clientHeight;
+  renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix();
+});
+</script>
+</body>
+</html>

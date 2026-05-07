@@ -2,252 +2,931 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ring Configurator Sample</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ring Designer</title>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
       height: 100%;
-      background: #ffffff;
-      font-family: Arial, sans-serif;
-    }
-
-    .layout {
-      display: flex;
-      height: 100vh;
-      width: 100vw;
-    }
-
-    #viewer {
-      flex: 1;
-      background: #ffffff;
-    }
-
-    .sidebar {
-      width: 300px;
-      padding: 20px;
-      border-left: 1px solid #ddd;
-      background: #fafafa;
-      overflow-y: auto;
-    }
-
-    h2 {
-      margin-top: 10px;
-      font-size: 16px;
-      color: #444;
-    }
-
-    .opt-btn {
-      padding: 6px 12px;
-      margin: 3px;
-      border-radius: 6px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #fff;
-      border: 1px solid #bbb;
-      cursor: pointer;
-      font-size: 13px;
-      transition: 0.2s;
+      overflow: hidden;
     }
 
-    .opt-btn:hover {
-      background: #eee;
+    /* ── HEADER ── */
+    .header {
+      height: 52px; background: #1A1A1A;
+      display: flex; align-items: center; padding: 0 22px;
+      flex-shrink: 0; z-index: 20;
+    }
+    .brand     { color: #B8963E; font-size: 16px; letter-spacing: 0.2em; font-weight: 700; text-transform: uppercase; }
+    .brand-sep { width: 1px; height: 16px; background: #3A3A3A; margin: 0 14px; }
+    .brand-sub { color: #777; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+    /* ── LAYOUT ── */
+    .app  { display: flex; flex-direction: column; height: 100vh; }
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── VIEWER ── */
+    .viewer-wrap { flex: 1; position: relative; background: #fff; }
+    #viewer { width: 100%; height: 100%; }
+
+    /* ── LOADING ── */
+    .loading {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.8); backdrop-filter: blur(2px);
+      z-index: 10; transition: opacity 0.3s;
+    }
+    .loading.hidden { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #DDD6CE; border-top-color: #B8963E;
+      border-radius: 50%; animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── CAM BUTTONS ── */
+    .cam-btns {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 7px; z-index: 5;
+    }
+    .cam-btn {
+      padding: 5px 13px; border: 1px solid rgba(200,190,180,0.7);
+      background: rgba(255,255,255,0.92); backdrop-filter: blur(4px);
+      border-radius: 20px; font-size: 11px; letter-spacing: 0.06em;
+      cursor: pointer; color: #666; transition: all 0.15s; text-transform: uppercase;
+    }
+    .cam-btn:hover { color: #B8963E; border-color: #B8963E; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 300px; background: #fff;
+      border-left: 1px solid #EAE4DC;
+      overflow-y: auto; flex-shrink: 0;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #E0D8D0; border-radius: 4px; }
+
+    /* ── SECTION ── */
+    .sec { padding: 16px 18px 14px; border-bottom: 1px solid #F2EDE6; }
+    .sec-title {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: #9A8570; margin-bottom: 12px;
     }
 
-    .opt-btn.active {
-      background: #0074ff;
-      color: #fff;
-      border-color: #0074ff;
+    /* ── COLOR SWATCHES ── */
+    .swatch-row { display: flex; gap: 10px; }
+    .swatch {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 2.5px solid transparent;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      cursor: pointer; transition: all 0.16s; padding: 0;
+    }
+    .swatch:hover { transform: scale(1.1); }
+    .swatch.active {
+      border-color: #B8963E;
+      box-shadow: 0 0 0 3px rgba(184,150,62,0.2), 0 2px 6px rgba(0,0,0,0.18);
+    }
+    .sw-w { background: linear-gradient(135deg, #F0F0F0, #B8B8B8 60%, #DCDCDC); }
+    .sw-y { background: linear-gradient(135deg, #F6D458, #C8940C 60%, #EAC040); }
+    .sw-r { background: linear-gradient(135deg, #EAA898, #C06858 60%, #D88878); }
+
+    /* ── STONE SHAPE GRID ── */
+    .shape-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .shape-card {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 9px 5px 7px; border: 1.5px solid #E8E2D8;
+      border-radius: 9px; background: #FAFAF8;
+      cursor: pointer; transition: all 0.16s; gap: 5px; font: inherit;
+    }
+    .shape-card:hover  { border-color: #C8AA7A; background: #FDF9F3; }
+    .shape-card.active { border-color: #B8963E; background: #FDF5E8; }
+    .shape-card svg    { width: 36px; height: 36px; }
+    .shape-card span   { font-size: 10px; color: #777; letter-spacing: 0.04em; }
+    .shape-card.active span { color: #B8963E; font-weight: 600; }
+
+    /* ── MOUNTING GRID ── */
+    .mount-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .mount-card {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 10px 8px 8px; border: 1.5px solid #E8E2D8;
+      border-radius: 9px; background: #FAFAF8;
+      cursor: pointer; transition: all 0.16s; gap: 5px; font: inherit; text-align: center;
+    }
+    .mount-card:hover  { border-color: #C8AA7A; background: #FDF9F3; }
+    .mount-card.active { border-color: #B8963E; background: #FDF5E8; }
+    .mount-card svg    { width: 48px; height: 26px; opacity: 0.55; }
+    .mount-card.active svg { opacity: 0.9; }
+    .mount-name { font-size: 10px; color: #666; line-height: 1.3; }
+    .mount-card.active .mount-name { color: #B8963E; font-weight: 600; }
+    .mount-code { font-size: 9px; color: #B0A890; letter-spacing: 0.04em; }
+
+    @media (max-width: 700px) {
+      html, body { overflow: auto; }
+      .app  { height: auto; }
+      .main { flex-direction: column; }
+      .viewer-wrap { height: 60vw; min-height: 240px; }
+      .sidebar { width: 100%; border-left: none; border-top: 1px solid #EAE4DC; }
     }
   </style>
 </head>
-
 <body>
-<div class="layout">
 
-  <!-- LEFT: 3D Viewer -->
-  <div id="viewer"></div>
+<div class="app">
+  <header class="header">
+    <span class="brand">Ring Studio</span>
+    <div class="brand-sep"></div>
+    <span class="brand-sub">Design Your Own Ring</span>
+  </header>
 
-  <!-- RIGHT: Simple UI -->
-  <div class="sidebar">
+  <div class="main">
 
-    <h2>Ring Head (Bottom)</h2>
-    <button class="opt-btn" data-head="Head_1.glb">Head 1</button>
-    <button class="opt-btn" data-head="Head_2.glb">Head 2</button>
+    <!-- 3D VIEWER -->
+    <div class="viewer-wrap">
+      <div id="viewer"></div>
+      <div id="loading" class="loading"><div class="spinner"></div></div>
+      <div class="cam-btns">
+        <button class="cam-btn" data-cam="front">Front</button>
+        <button class="cam-btn" data-cam="angle">Angle</button>
+        <button class="cam-btn" data-cam="top">Top</button>
+      </div>
+    </div>
 
-    <h2>Stone Shape (Top)</h2>
-    <button class="opt-btn" data-stone="Top_Round.glb">Round</button>
-    <button class="opt-btn" data-stone="Top_Ovel.glb">Oval</button>
-    <button class="opt-btn" data-stone="Top_Heart.glb">Heart</button>
-    <button class="opt-btn" data-stone="Top_Marquis.glb">Marquise</button>
-    <button class="opt-btn" data-stone="Top_Aquer.glb">Pear</button>
-    <button class="opt-btn" data-stone="Top_Ractangle.glb">Rectangle</button>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
 
-    <h2>Metal</h2>
-    <button class="opt-btn" data-metal="yellow">Yellow Gold</button>
-    <button class="opt-btn" data-metal="white">White Gold</button>
-    <button class="opt-btn" data-metal="rose">Rose Gold</button>
+      <!-- Metal Color — single control for the whole ring -->
+      <div class="sec">
+        <div class="sec-title">Metal Color</div>
+        <div class="swatch-row">
+          <button class="swatch sw-w active" data-metal="white"  title="White Gold"></button>
+          <button class="swatch sw-y"        data-metal="yellow" title="Yellow Gold"></button>
+          <button class="swatch sw-r"        data-metal="rose"   title="Rose Gold"></button>
+        </div>
+      </div>
 
+      <!-- Stone Shape -->
+      <div class="sec">
+        <div class="sec-title">Center Stone Shape</div>
+        <div class="shape-grid" id="shape-grid"></div>
+      </div>
+
+      <!-- Ring Band -->
+      <div class="sec">
+        <div class="sec-title">Ring Band</div>
+        <div class="mount-grid" id="mount-grid"></div>
+      </div>
+
+    </aside>
   </div>
-
 </div>
 
-<!-- Three.js -->
-<script src="https://unpkg.com/three@0.146.0/build/three.min.js"></script>
-<script src="https://unpkg.com/three@0.146.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://unpkg.com/three@0.146.0/examples/js/loaders/GLTFLoader.js"></script>
-
+<!-- ═══════════════════════════════════════════════════════
+     GLOBAL CONFIG — edit this block to configure the viewer
+     ═══════════════════════════════════════════════════════ -->
 <script>
-/* CONFIG */
-const CONFIG = {
+window.RING_CONFIG = {
+
+  /* Paths */
+  headsPath:  'models/',
+  shanksPath: 'models/',
+
+  /* Normalisation target (world units) */
+  targetSize: 0.50,
+
+  /* Metal materials */
   metals: {
-    yellow: 0xF8D879,
-    white:  0xE8E8E8,
-    rose:   0xE4B2A8
+    white:  { color: 0xE8E8E8, metalness: 1, roughness: 0.08 },
+    yellow: { color: 0xFFD989, metalness: 1, roughness: 0.06 },
+    rose:   { color: 0xFFBBAA, metalness: 1, roughness: 0.07 },
   },
-  basePath: "/Jewellery_3D/models/"
+
+  /* Camera preset positions [x, y, z] */
+  cameraPresets: {
+    front: [0.18, 0.22, 1.1],
+    angle: [0.70, 0.45, 0.85],
+    top:   [0.04, 1.20, 0.25],
+  },
+
+  /* Stone shapes — file lives in headsPath */
+  heads: [
+    {
+      code: 'RD', label: 'Round', file: 'Top_Round.glb',
+      svg: `<circle cx="18" cy="18" r="14" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4"/>
+            <circle cx="18" cy="18" r="7" stroke="#C8AA7A" stroke-dasharray="2 2.5" stroke-width="1" fill="none" opacity=".6"/>`
+    },
+    {
+      code: 'OV', label: 'Oval', file: 'Top_Oval.glb',
+      svg: `<ellipse cx="18" cy="18" rx="10" ry="14" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4"/>
+            <ellipse cx="18" cy="18" rx="5.5" ry="8" stroke="#C8AA7A" stroke-dasharray="2 2.5" stroke-width="1" fill="none" opacity=".6"/>`
+    },
+    {
+      code: 'HT', label: 'Heart', file: 'Top_Heart.glb',
+      svg: `<path d="M18 30 C18 30 5 20 5 12 C5 7 9 4 13 4 C15.5 4 17.5 5.8 18 7.5 C18.5 5.8 20.5 4 23 4 C27 4 31 7 31 12 C31 20 18 30 18 30Z" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4"/>`
+    },
+    {
+      code: 'MQ', label: 'Marquise', file: 'Top_Marquise.glb',
+      svg: `<path d="M18 3 Q28 18 18 33 Q8 18 18 3Z" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4"/>
+            <path d="M18 9 Q25 18 18 27 Q11 18 18 9Z" stroke="#C8AA7A" stroke-dasharray="2 2.5" stroke-width="1" fill="none" opacity=".6"/>`
+    },
+    {
+      code: 'EM', label: 'Emerald', file: 'Top_Ractangle.glb',
+      svg: `<rect x="7" y="5" width="22" height="26" rx="3" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4"/>
+            <rect x="11" y="9" width="14" height="18" rx="2" stroke="#C8AA7A" stroke-dasharray="2 2.5" stroke-width="1" fill="none" opacity=".6"/>`
+    },
+    {
+      code: 'AS', label: 'Asscher', file: 'Top_Asscher.glb',
+      svg: `<path d="M11 5 L25 5 L31 11 L31 25 L25 31 L11 31 L5 25 L5 11 Z" fill="#EDE6DC" stroke="#9A8570" stroke-width="1.4"/>
+            <path d="M14 9 L22 9 L27 14 L27 22 L22 27 L14 27 L9 22 L9 14 Z" stroke="#C8AA7A" stroke-dasharray="2 2.5" stroke-width="1" fill="none" opacity=".6"/>`
+    },
+  ],
+
+  /* Ring bands — file lives in shanksPath */
+  /* headY: fine-tune stone vertical offset per band (+up / -down) */
+  shanks: [
+    { code: 'HD1', name: 'Classic Solitaire', file: 'Head_1.glb', headY: 0.00 },
+    { code: 'HD2', name: 'Pavé Band',         file: 'Head_2.glb', headY: -0.04 },
+  ],
 };
+</script>
 
-let ringMesh = null;
-let stoneMesh = null;
+<script type="importmap">
+{
+  "imports": {
+    "three":         "https://unpkg.com/three@0.163.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.163.0/examples/jsm/"
+  }
+}
+</script>
 
-const container = document.getElementById("viewer");
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls }   from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader }     from 'three/addons/loaders/DRACOLoader.js';
+import { RGBELoader }      from 'three/addons/loaders/RGBELoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-/* ======== SCENE ======== */
+/* ── pull in global config ── */
+const CFG         = window.RING_CONFIG;
+const HEAD_BASE   = CFG.headsPath;
+const SHANK_BASE  = CFG.shanksPath;
+const TARGET_SIZE = CFG.targetSize;
+const HEAD_OFFSET_Y = CFG.headOffsetY ?? 0.015;
+const METALS      = CFG.metals;
+const HEADS_DATA  = CFG.heads;
+const SHANKS_DATA = CFG.shanks;
+const CAM_PRESETS = Object.fromEntries(
+  Object.entries(CFG.cameraPresets).map(([k, v]) => [k, new THREE.Vector3(...v)])
+);
+
+/* ── state ── */
+let ringAssembly = null;
+let shankMesh    = null;
+let headMesh     = null;
+let activeShank  = SHANKS_DATA[0];
+let activeHead   = HEADS_DATA[0];
+let camTarget    = null;
+let autoTimer    = null;
+let pendingLoads = 0;
+let rebuildToken = 0;
+const modelCache = {};
+let currentMetal = 'white';   // single metal colour for the whole ring
+
+/* ── renderer ── */
+const container = document.getElementById('viewer');
+const renderer  = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.6;
+container.appendChild(renderer.domElement);
+
+/* ── scene + environment ── */
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);
 
-const camera = new THREE.PerspectiveCamera(
-  30,
-  container.clientWidth / container.clientHeight,
-  0.1,
-  100
+const pmrem = new THREE.PMREMGenerator(renderer);
+pmrem.compileEquirectangularShader();
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 2;
+
+new RGBELoader().load(
+  'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr',
+  tex => {
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    scene.environment = pmrem.fromEquirectangular(tex).texture;
+    scene.environmentIntensity = 2;
+    tex.dispose(); pmrem.dispose();
+  }
 );
-camera.position.set(0.5, 0.3, 1.4);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(container.clientWidth, container.clientHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
-container.appendChild(renderer.domElement);
+/* ── camera + controls ── */
+const camera = new THREE.PerspectiveCamera(30, container.clientWidth / container.clientHeight, 0.01, 100);
+camera.position.copy(CAM_PRESETS.front);
 
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping   = true;
+controls.dampingFactor   = 0.06;
+controls.target.set(0, 0.05, 0);
+controls.minDistance     = 0.4;
+controls.maxDistance     = 4;
+controls.autoRotate      = true;
+controls.autoRotateSpeed = 1.2;
 
-/* ======== James Allen Lighting ======== */
-scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+renderer.domElement.addEventListener('pointerdown', () => {
+  controls.autoRotate = false; clearTimeout(autoTimer); camTarget = null;
+});
+renderer.domElement.addEventListener('pointerup', () => {
+  autoTimer = setTimeout(() => { controls.autoRotate = true; }, 3000);
+});
 
-const key = new THREE.DirectionalLight(0xffffff, 1.6);
-key.position.set(2, 4, 3);
-scene.add(key);
+/* ── lights ── */
+scene.add(new THREE.AmbientLight(0xffffff, 0.50));
+const key  = new THREE.DirectionalLight(0xFFF8F0, 1.8); key.position.set(2, 4, 3);   scene.add(key);
+const fill = new THREE.DirectionalLight(0xF0F4FF, 1.0); fill.position.set(-3, 2, 4); scene.add(fill);
+const rim  = new THREE.DirectionalLight(0xFFF8EC, 0.75); rim.position.set(0, 3, -4); scene.add(rim);
+const bot  = new THREE.DirectionalLight(0xE8EEFF, 0.40); bot.position.set(0, -3, 2); scene.add(bot);
 
-const fill = new THREE.DirectionalLight(0xffffff, 1.2);
-fill.position.set(-2, 2, 4);
-scene.add(fill);
+/* ── contact shadow ── */
+const shadowTex = (() => {
+  const s = 128, c = document.createElement('canvas');
+  c.width = c.height = s;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
+  g.addColorStop(0,   'rgba(0,0,0,0.10)');
+  g.addColorStop(0.4, 'rgba(0,0,0,0.04)');
+  g.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, s, s);
+  return new THREE.CanvasTexture(c);
+})();
+const gnd = new THREE.Mesh(
+  new THREE.PlaneGeometry(TARGET_SIZE * 2.2, TARGET_SIZE * 2.2),
+  new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false })
+);
+gnd.rotation.x = -Math.PI / 2;
+gnd.position.y = -TARGET_SIZE * 0.26;
+scene.add(gnd);
 
-const rim = new THREE.DirectionalLight(0xffffff, 1.0);
-rim.position.set(0, 3, -4);
-scene.add(rim);
+/* ── loader ── */
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://unpkg.com/three@0.163.0/examples/jsm/libs/draco/');
+const loader = new GLTFLoader();
+loader.setDRACOLoader(dracoLoader);
 
-const loader = new THREE.GLTFLoader();
+const loadingEl = document.getElementById('loading');
+function showLoading() { pendingLoads++; loadingEl.classList.remove('hidden'); }
+function hideLoading() { if (--pendingLoads <= 0) { pendingLoads = 0; loadingEl.classList.add('hidden'); } }
 
-/* ======== RING HEAD LOADER ======== */
+/* ── tweening ── */
+function tween(from, to, ms, ease, onUpdate, onDone) {
+  const t0 = performance.now();
+  (function step(now) {
+    const p = Math.min((now - t0) / ms, 1);
+    onUpdate(from + (to - from) * ease(p));
+    p < 1 ? requestAnimationFrame(step) : onDone?.();
+  })(t0);
+}
+const easeInOut = p => p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2, 2)/2;
+
+function setOpacity(obj, v) {
+  obj.traverse(c => {
+    if (!c.isMesh) return;
+    (Array.isArray(c.material) ? c.material : [c.material])
+      .forEach(m => { m.transparent = true; m.opacity = v; });
+  });
+}
+
+function crossDissolve(oldObj, newObj) {
+  setOpacity(newObj, 0);
+  scene.add(newObj);
+  newObj.updateMatrixWorld(true);
+  tween(0, 1, 380, easeInOut, v => {
+    if (oldObj) setOpacity(oldObj, 1 - v);
+    setOpacity(newObj, v);
+  }, () => {
+    if (oldObj) scene.remove(oldObj);
+    newObj.traverse(c => {
+      if (!c.isMesh) return;
+      (Array.isArray(c.material) ? c.material : [c.material])
+        .forEach(m => { m.opacity = 1; m.transparent = m.transmission > 0; });
+    });
+  });
+}
+
+/* ── normalise ── */
+function getModelKey(base, file) {
+  return `${base}${file}`;
+}
+
+function ensureModel(base, file) {
+  const key = getModelKey(base, file);
+  if (modelCache[key]) return Promise.resolve(modelCache[key]);
+  return new Promise((resolve, reject) => {
+    loader.load(
+      base + file,
+      gltf => {
+        modelCache[key] = gltf.scene;
+        resolve(gltf.scene);
+      },
+      undefined,
+      reject
+    );
+  });
+}
+
+function fitAssemblyGroup(group, shank) {
+  shank.updateMatrixWorld(true);
+  const shankBox = new THREE.Box3().setFromObject(shank);
+  const shankSize = shankBox.getSize(new THREE.Vector3());
+  const shankMaxDim = Math.max(shankSize.x, shankSize.y, shankSize.z);
+  const scale = shankMaxDim > 0 ? TARGET_SIZE / shankMaxDim : 1;
+
+  group.scale.setScalar(scale);
+  group.updateMatrixWorld(true);
+
+  const fullBox = new THREE.Box3().setFromObject(group);
+  const fullCenter = fullBox.getCenter(new THREE.Vector3());
+  group.position.copy(fullCenter.multiplyScalar(-1));
+  group.updateMatrixWorld(true);
+}
+
+function buildRingAssembly(shankSrc, headSrc) {
+  const assembly = new THREE.Group();
+  const shank = shankSrc.clone(true);
+  const head = headSrc.clone(true);
+
+  // Keep the exported local relationship between lower mount and top assembly.
+  shank.position.set(0, 0, 0);
+  head.position.set(0, HEAD_OFFSET_Y, 0);
+
+  applyMaterials(shank, true);
+  applyMaterials(head, false);
+
+  assembly.add(shank);
+  assembly.add(head);
+  fitAssemblyGroup(assembly, shank);
+
+  return { assembly, shank, head };
+}
+
+
+/*
+ * positionHead — flush-mounts the stone setting on top of the ring band.
+ *
+ * Aligns the bottom of the head model (sb.min.y) with stoneTargetY,
+ * then tucks it slightly into the shank so the seat looks flush.
+ * Use headY in RING_CONFIG.shanks[].headY to fine-tune per-band:
+ *   negative = slide the head down (close a gap)
+ *   positive = raise the head higher
+ */
+
+/* ════════════════════════════════════════════════════════════
+ * GEM SHADER  — physically-based ray-traced diamond material
+ * ════════════════════════════════════════════════════════════ */
+function buildGemMaterial(geometry) {
+  const geo    = geometry.clone();
+  const tmpBox = new THREE.Box3().setFromBufferAttribute(geo.attributes.position);
+  const ctr    = tmpBox.getCenter(new THREE.Vector3());
+  geo.applyMatrix4(new THREE.Matrix4().makeTranslation(-ctr.x, -ctr.y, -ctr.z));
+
+  const pos = geo.attributes.position.array;
+  let minR = Infinity, maxR = 0;
+  for (let i = 0; i < pos.length; i += 3) {
+    const d = Math.sqrt(pos[i]*pos[i] + pos[i+1]*pos[i+1] + pos[i+2]*pos[i+2]);
+    if (d < minR) minR = d;
+    if (d > maxR) maxR = d;
+  }
+  if (!isFinite(minR) || minR <= 0) minR = maxR * 0.4;
+
+  const cubeRT = new THREE.WebGLCubeRenderTarget(256, {
+    minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter,
+    generateMipmaps: false, depthBuffer: false,
+    colorSpace: THREE.LinearSRGBColorSpace,
+  });
+  const bakeMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide, blending: THREE.NoBlending,
+    uniforms: { u0: { value: minR }, u1: { value: maxR } },
+    vertexShader: `varying vec3 vP,vN;
+      void main(){vP=position;vN=normalize(normal);
+        gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1);}`,
+    fragmentShader: `precision mediump float;
+      uniform float u0,u1;varying vec3 vP,vN;
+      void main(){gl_FragColor=vec4(0.5+0.5*normalize(vN),(length(vP)-u0)/(u1-u0));}`,
+  });
+  const bakeScene = new THREE.Scene();
+  bakeScene.add(new THREE.Mesh(geo, bakeMat));
+  new THREE.CubeCamera(minR * 0.01, maxR * 10, cubeRT).update(renderer, bakeScene);
+
+  const u = {
+    uEye:    { value: new THREE.Vector3() },
+    uAbsorb: { value: new THREE.Vector3(0.00065, 0.00050, 0.00038) },
+    uDisp:   { value: new THREE.Vector3(2.405, 2.417, 2.429) },
+    uGemMap: { value: cubeRT.texture },
+    uMinR:   { value: minR },
+    uMaxR:   { value: maxR },
+    uCtr:    { value: ctr },
+    uEnvRot: { value: new THREE.Matrix4() },
+  };
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: u,
+    blending: THREE.NoBlending,
+    vertexShader: `
+      varying vec3 vPos, vNor;
+      void main() {
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+        vPos = position; vNor = normalize(normal);
+      }`,
+    fragmentShader: `
+      precision highp float;
+      uniform vec3 uEye, uAbsorb, uDisp, uCtr;
+      uniform float uMinR, uMaxR;
+      uniform mat4  uEnvRot;
+      uniform samplerCube uGemMap;
+      varying vec3 vPos, vNor;
+
+      vec3 gemEnv(vec3 d) {
+        d = normalize((uEnvRot * vec4(d,0.0)).xyz);
+
+        float up = clamp(d.y * 0.5 + 0.5, 0.0, 1.0);
+        float horizon = pow(1.0 - abs(d.y), 1.9);
+        float front = clamp(d.z * 0.5 + 0.5, 0.0, 1.0);
+
+        vec3 base =
+          vec3(0.80, 0.84, 0.92) * (0.08 + 0.22 * pow(up, 1.2)) +
+          vec3(0.98, 0.99, 1.00) * (0.05 + 0.09 * horizon) +
+          vec3(0.88, 0.90, 0.96) * (0.02 + 0.04 * front);
+
+        float B0 = pow(max(0.0, dot(d, normalize(vec3( 0.00, 0.98, 0.18)))), 18.0) * 0.54;
+        float B1 = pow(max(0.0, dot(d, normalize(vec3( 0.56, 0.78, 0.24)))), 24.0) * 0.36;
+        float B2 = pow(max(0.0, dot(d, normalize(vec3(-0.58, 0.76, 0.12)))), 24.0) * 0.34;
+        float B3 = pow(max(0.0, dot(d, normalize(vec3( 0.00, 0.58,-0.82)))), 20.0) * 0.20;
+
+        float P0 = pow(max(0.0, dot(d, normalize(vec3( 0.22, 0.98, 0.42)))), 120.0) * 3.2;
+        float P1 = pow(max(0.0, dot(d, normalize(vec3(-0.34, 0.94, 0.20)))), 110.0) * 2.4;
+        float P2 = pow(max(0.0, dot(d, normalize(vec3( 0.00, 1.00, 0.00)))), 220.0) * 5.4;
+        float P3 = pow(max(0.0, dot(d, normalize(vec3( 0.48, 0.80,-0.18)))), 120.0) * 1.8;
+
+        float darkBand = pow(max(0.0, dot(d, normalize(vec3(0.0, -0.10, 1.0)))), 9.0) * 0.14;
+        vec3 softboxes = vec3(1.00, 1.02, 1.06) * (B0 + B1 + B2 + B3);
+        vec3 pinFire = vec3(1.08, 1.03, 0.98) * (P0 + P1 + P2 + P3);
+
+        return max(base + softboxes + pinFire - vec3(darkBand), vec3(0.02));
+      }
+      float fresnel(vec3 i,vec3 n,float ior){
+        float cI=abs(dot(i,n)),s2=(1.0/ior)*(1.0/ior)*(1.0-cI*cI);
+        if(s2>=1.0)return 1.0;
+        float cT=sqrt(1.0-s2),rs=(cI-ior*cT)/(cI+ior*cT),rp=(ior*cT-cI)/(ior*cT+cI);
+        return 0.5*(rs*rs+rp*rp);
+      }
+      float gemHit(vec3 p,vec3 d,out vec3 hn){
+        float dp=dot(p,d),delta=sqrt(max(0.0,dp*dp-dot(p,p)+uMaxR*uMaxR));
+        float t0=0.0,t1=-dp+delta;
+        for(int i=0;i<12;i++){
+          float tm=0.5*(t0+t1); vec3 pp=p+tm*d;
+          vec4 s=textureCube(uGemMap,normalize(pp));
+          float r=mix(uMinR,uMaxR,s.a); vec3 nn=normalize(2.0*s.rgb-1.0);
+          if(length(pp)>r&&dot(d,nn)>0.0)t1=tm;else t0=tm;
+        }
+        float t=0.5*(t0+t1); vec4 s=textureCube(uGemMap,normalize(p+t*d));
+        hn=normalize(2.0*s.rgb-1.0); return t;
+      }
+      vec3 traceChannel(vec3 p,vec3 d,float ior){
+        float inv=1.0/ior,w=1.0,dist=0.0; vec3 col=vec3(0.0);
+        for(int i=0;i<8;i++){
+          vec3 hn; float t=gemHit(p,d,hn); dist+=t; p+=t*d;
+          vec3 rf=refract(d,-hn,ior); bool tir=(dot(rf,rf)<0.01);
+          float R=tir?1.0:fresnel(d,-hn,inv);
+          if(!tir) col+=w*(1.0-R)*gemEnv(rf)*exp(-uAbsorb*dist);
+          w*=R; d=reflect(d,-hn);
+          if(w<0.004)break;
+        }
+        return col+w*gemEnv(d)*exp(-uAbsorb*dist);
+      }
+      void main(){
+        vec3 lp=vPos-uCtr, eye=normalize(lp-(uEye-uCtr)), n=normalize(vNor);
+        vec3 rc=traceChannel(lp,refract(eye,n,1.0/uDisp.x),uDisp.x);
+        vec3 gc=traceChannel(lp,refract(eye,n,1.0/uDisp.y),uDisp.y);
+        vec3 bc=traceChannel(lp,refract(eye,n,1.0/uDisp.z),uDisp.z);
+        float R_entry=fresnel(eye,n,uDisp.y);
+        float faceOn = pow(clamp(abs(dot(eye, n)), 0.0, 1.0), 4.0);
+        vec3 traced = max(vec3(rc.r, gc.g, bc.b), vec3(0.0));
+        vec3 sparkle = gemEnv(reflect(eye,n)) * mix(1.55, 1.05, faceOn);
+        vec3 faceLight = gemEnv(-eye) * mix(0.03, 0.01, faceOn);
+        traced = pow(traced, vec3(1.02 + faceOn * 0.10));
+        vec3 finalColor = traced * (1.0 - R_entry) + sparkle * R_entry + faceLight;
+        vec3 compressed = finalColor / (1.0 + finalColor * 0.85);
+        finalColor = mix(finalColor, compressed, 0.18 + faceOn * 0.42);
+        gl_FragColor=vec4(finalColor,1.0);
+      }`,
+  });
+
+  mat.onBeforeRender = (rdr, scn, cam, geom, obj) => {
+    obj.updateWorldMatrix(true, false);
+    u.uEye.value.copy(cam.position).applyMatrix4(obj.matrixWorld.clone().invert());
+    u.uEnvRot.value.extractRotation(obj.matrixWorld);
+  };
+  return mat;
+}
+
+/* ── gem tagging ──────────────────────────────────────────────────
+ *
+ * Priority chain (stops at first match):
+ *  1. Mesh name hint  (gem/stone/diamond…)
+ *  2. GLTF transmission > 0   → gem material set in authoring tool
+ *  3. Genuine metalness split  → some metal, some not
+ *  4. Low-roughness (< 0.05) + low-metalness split → polished stone
+ *  5. Geometry score = equidimensionality × bounding-volume
+ *     A diamond is a solid compact shape (high score).
+ *     Prongs are thin cylinders (low score). Basket is a hollow
+ *     ring (low score). Works regardless of vertex counts.
+ *
+ * Debug: open the browser console — mesh details are logged every
+ * time a head model loads so you can verify which mesh is tagged.
+ */
+function tagHeadGem(group) {
+  // 1) Named hints
+  let namedGems = 0;
+  group.traverse(c => {
+    if (!c.isMesh) return;
+    if (/gem|stone|diamond|center|crystal|(?:^|[_-])d(?:$|[_-])/i.test(c.name)) { c._isGem = true; namedGems++; }
+  });
+  if (namedGems > 0) return;
+
+  const meshes = [];
+  group.traverse(c => { if (c.isMesh) meshes.push(c); });
+
+  // 2) Transmission material → definite gem
+  let transGems = 0;
+  meshes.forEach(c => {
+    const mat = Array.isArray(c.material) ? c.material[0] : c.material;
+    if (mat && (mat.transmission ?? 0) > 0) { c._isGem = true; transGems++; }
+  });
+  if (transGems > 0) return;
+
+  // 3) Genuine metalness split (some > 0.5, some ≤ 0.5)
+  const metalMeshes = meshes.filter(c => {
+    const mat = Array.isArray(c.material) ? c.material[0] : c.material;
+    return mat && (mat.metalness ?? 0) > 0.5;
+  });
+  if (metalMeshes.length > 0 && metalMeshes.length < meshes.length) {
+    meshes.forEach(c => {
+      const mat = Array.isArray(c.material) ? c.material[0] : c.material;
+      if (!mat || (mat.metalness ?? 0) <= 0.5) c._isGem = true;
+    });
+    return;
+  }
+
+  // 4) Low-roughness split: stone = perfectly polished (roughness≈0)
+  const smooth = meshes.filter(c => {
+    const mat = Array.isArray(c.material) ? c.material[0] : c.material;
+    return mat && (mat.roughness ?? 1) < 0.05 && (mat.metalness ?? 0) < 0.5;
+  });
+  if (smooth.length > 0 && smooth.length < meshes.length) {
+    smooth.forEach(c => c._isGem = true);
+    return;
+  }
+
+  // 5) Geometry heuristic — central & high.
+  //    In every ring head model the stone sits at the XZ centre of the
+  //    setting and is the topmost element.
+  //    Prongs are laterally offset → penalised by their XZ distance.
+  //    Basket is below → penalised by lower Y centroid.
+  //    Score = centroid.y  −  xzOffset × 2
+  group.updateWorldMatrix(true, true);
+  const gBox    = new THREE.Box3().setFromObject(group);
+  const gCenter = gBox.getCenter(new THREE.Vector3());
+
+  let best = null, bestScore = -Infinity;
+  console.group('Head gem detection');
+  meshes.forEach(c => {
+    const pos = c.geometry.attributes.position;
+    if (!pos) return;
+    const mat  = Array.isArray(c.material) ? c.material[0] : c.material;
+    const b    = new THREE.Box3().setFromObject(c);
+    const cc   = b.getCenter(new THREE.Vector3());
+    const dx   = cc.x - gCenter.x, dz = cc.z - gCenter.z;
+    const xzD  = Math.sqrt(dx*dx + dz*dz);
+    const score = cc.y - xzD * 2.0;
+    console.log(
+      `  "${c.name || '(unnamed)'}"`
+      + `  verts=${pos.count}`
+      + `  m=${mat?.metalness?.toFixed(2)??'?'}`
+      + `  r=${mat?.roughness?.toFixed(2)??'?'}`
+      + `  t=${mat?.transmission?.toFixed(2)??'?'}`
+      + `  cy=${cc.y.toFixed(3)}  xzD=${xzD.toFixed(3)}  score=${score.toFixed(3)}`
+    );
+    if (score > bestScore) { bestScore = score; best = c; }
+  });
+  if (best) {
+    best._isGem = true;
+    console.log(`  → gem: "${best.name || '(unnamed)'}"  score ${bestScore.toFixed(3)}`);
+  }
+  console.groupEnd();
+}
+
+/*
+ * Shank (band) gems — pavé accent stones only.
+ * We auto-detect pave only when there are clearly many (≥8) tiny meshes.
+ * Prong meshes are small but few (4-6); this threshold avoids false positives.
+ */
+function tagShankGems(group) {
+  const meshes = [];
+  group.traverse(c => { if (c.isMesh) meshes.push(c); });
+  if (meshes.length <= 1) return;
+
+  let anyNamed = false;
+  for (const c of meshes) {
+    if (/gem|stone|diamond|crystal|pave|pavé|accent/i.test(c.name)) { c._isGem = true; anyNamed = true; }
+  }
+  if (anyNamed) return;
+
+  // Auto-detect pave: many small meshes (≥8) each < 8 % of largest mesh
+  const maxV  = Math.max(...meshes.map(c => c.geometry.attributes.position?.count || 0));
+  const tiny  = meshes.filter(c => {
+    const v = c.geometry.attributes.position?.count || 0;
+    return v > 0 && v < maxV * 0.08;
+  });
+  if (tiny.length >= 8) tiny.forEach(c => c._isGem = true);
+}
+
+function isGemMesh(c) { return c._isGem === true; }
+
+/* ── apply materials ── */
+function applyMaterials(mesh, isShank) {
+  const m = METALS[currentMetal];
+  if (isShank) tagShankGems(mesh);
+  else         tagHeadGem(mesh);
+
+  mesh.traverse(c => {
+    if (!c.isMesh) return;
+    c.geometry.computeVertexNormals();
+
+    if (isGemMesh(c)) {
+      c.material = isShank
+        ? new THREE.MeshPhysicalMaterial({  // pavé accent (lightweight)
+            color: 0xEEF4FF, roughness: 0.0, metalness: 0,
+            transmission: 0.90, ior: 2.42, thickness: 0.3,
+            dispersion: 1.5, specularIntensity: 1.0, reflectivity: 1.0,
+            envMapIntensity: 6.0, transparent: true,
+          })
+        : buildGemMaterial(c.geometry);    // center stone (ray-traced)
+    } else {
+      c.material = new THREE.MeshPhysicalMaterial({
+        color: m.color, metalness: m.metalness, roughness: m.roughness,
+        envMapIntensity: 7.0, reflectivity: 1.0,
+      });
+    }
+  });
+}
+
+function tweenColor(mesh, metalName) {
+  const toColor = new THREE.Color(METALS[metalName].color);
+  const states  = [];
+  mesh.traverse(c => {
+    if (!c.isMesh || isGemMesh(c)) return;
+    states.push({ mat: c.material, from: c.material.color.clone() });
+  });
+  tween(0, 1, 500, easeInOut, v => {
+    states.forEach(({ mat, from }) => mat.color.lerpColors(from, toColor, v));
+  });
+}
+
+/* ── load shank (ring band) ── */
+async function rebuildAssembly() {
+  const token = ++rebuildToken;
+  const old = ringAssembly;
+  showLoading();
+
+  try {
+    const [shankSrc, headSrc] = await Promise.all([
+      ensureModel(SHANK_BASE, activeShank.file),
+      ensureModel(HEAD_BASE, activeHead.file),
+    ]);
+
+    if (token !== rebuildToken) return;
+
+    const built = buildRingAssembly(shankSrc, headSrc);
+    ringAssembly = built.assembly;
+    shankMesh = built.shank;
+    headMesh = built.head;
+    crossDissolve(old, ringAssembly);
+  } catch (err) {
+    console.error('Failed to rebuild ring assembly', err);
+  } finally {
+    hideLoading();
+  }
+}
+
+function loadShank(file) {
+  activeShank = SHANKS_DATA.find(s => s.file === file) ?? activeShank;
+  rebuildAssembly();
+}
+
+/* ── load head (stone shape) ── */
 function loadHead(file) {
-  if (ringMesh) scene.remove(ringMesh);
+  activeHead = HEADS_DATA.find(h => h.file === file) ?? activeHead;
+  rebuildAssembly();
+}
 
-  loader.load(CONFIG.basePath + file, gltf => {
-    ringMesh = gltf.scene;
+/* ── build UI ── */
+const ringIcon = `<svg viewBox="0 0 48 26" fill="none" stroke="#9A8570" stroke-width="1.3" stroke-linecap="round">
+  <path d="M4,23 Q4,5 24,4 Q44,5 44,23"/>
+  <path d="M18,4 L24,1 L30,4"/>
+  <circle cx="24" cy="1.5" r="2" fill="#B8963E" stroke="none"/>
+</svg>`;
 
-    ringMesh.traverse(c => {
-      if (c.isMesh) {
-        c.geometry.computeVertexNormals();
-        c.material = new THREE.MeshStandardMaterial({
-          color: CONFIG.metals.white,
-          metalness: 1.0,
-          roughness: 0.25
-        });
-      }
-    });
+const shapeGrid = document.getElementById('shape-grid');
+HEADS_DATA.forEach((h, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'shape-card' + (i === 0 ? ' active' : '');
+  btn.dataset.file = h.file;
+  btn.innerHTML = `<svg viewBox="0 0 36 36">${h.svg}</svg><span>${h.label}</span>`;
+  shapeGrid.appendChild(btn);
+});
 
-    scene.add(ringMesh);
+const mountGrid = document.getElementById('mount-grid');
+SHANKS_DATA.forEach((s, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'mount-card' + (i === 0 ? ' active' : '');
+  btn.dataset.file = s.file;
+  btn.innerHTML = `${ringIcon}<span class="mount-name">${s.name}</span><span class="mount-code">${s.code}</span>`;
+  mountGrid.appendChild(btn);
+});
+
+/* ── UI events ── */
+function setActive(btn, selector) {
+  document.querySelectorAll(selector).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// Single metal-colour swatch applies to both shank and head
+document.querySelectorAll('[data-metal]').forEach(btn =>
+  btn.addEventListener('click', () => {
+    setActive(btn, '[data-metal]');
+    currentMetal = btn.dataset.metal;
+    if (shankMesh) tweenColor(shankMesh, currentMetal);
+    if (headMesh)  tweenColor(headMesh,  currentMetal);
+  })
+);
+
+shapeGrid.addEventListener('click', e => {
+  const card = e.target.closest('[data-file]');
+  if (!card) return;
+  setActive(card, '#shape-grid [data-file]');
+  loadHead(card.dataset.file);
+});
+
+mountGrid.addEventListener('click', e => {
+  const card = e.target.closest('[data-file]');
+  if (!card) return;
+  setActive(card, '#mount-grid [data-file]');
+  loadShank(card.dataset.file);
+});
+
+document.querySelectorAll('[data-cam]').forEach(btn =>
+  btn.addEventListener('click', () => {
+    camTarget = CAM_PRESETS[btn.dataset.cam].clone();
+    controls.autoRotate = false; clearTimeout(autoTimer);
+  })
+);
+
+/* ── background preload ── */
+function preloadAll() {
+  HEADS_DATA.forEach(h => {
+    ensureModel(HEAD_BASE, h.file).catch(() => {});
+  });
+  SHANKS_DATA.forEach(s => {
+    ensureModel(SHANK_BASE, s.file).catch(() => {});
   });
 }
 
-/* ======== STONE SHAPE LOADER ======== */
-function loadStone(file) {
-  if (stoneMesh) scene.remove(stoneMesh);
+/* ── initial load ── */
+rebuildAssembly();
+setTimeout(preloadAll, 2000);
 
-  loader.load(CONFIG.basePath + file, gltf => {
-    stoneMesh = gltf.scene;
-    stoneMesh.position.set(0, 0.015, 0);
-
-    stoneMesh.traverse(c => {
-      if (c.isMesh) {
-        c.geometry.computeVertexNormals();
-        c.material = new THREE.MeshPhysicalMaterial({
-          color: 0xffffff,
-          roughness: 0.02,
-          metalness: 0,
-          transmission: 0.97,
-          ior: 2.4,
-          thickness: 2,
-          envMapIntensity: 2
-        });
-      }
-    });
-
-    scene.add(stoneMesh);
-  });
-}
-
-/* Load default parts */
-loadHead("Head_1.glb");
-loadStone("Top_Round.glb");
-
-/* ======== UI EVENTS ======== */
-function activate(btn, group) {
-  document.querySelectorAll(group).forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-}
-
-/* Head (Bottom) */
-document.querySelectorAll("[data-head]").forEach(btn => {
-  btn.onclick = () => {
-    activate(btn, "[data-head]");
-    loadHead(btn.dataset.head);
-  };
-});
-
-/* Stone shape */
-document.querySelectorAll("[data-stone]").forEach(btn => {
-  btn.onclick = () => {
-    activate(btn, "[data-stone]");
-    loadStone(btn.dataset.stone);
-  };
-});
-
-/* Metal */
-document.querySelectorAll("[data-metal]").forEach(btn => {
-  btn.onclick = () => {
-    activate(btn, "[data-metal]");
-    const col = CONFIG.metals[btn.dataset.metal];
-    if (ringMesh)
-      ringMesh.traverse(c => c.isMesh && c.material.color.setHex(col));
-  };
-});
-
-/* Render Loop */
+/* ── render loop ── */
 function animate() {
   requestAnimationFrame(animate);
+  if (camTarget) {
+    camera.position.lerp(camTarget, 0.07);
+    camera.lookAt(controls.target);
+    if (camera.position.distanceTo(camTarget) < 0.008) {
+      camera.position.copy(camTarget); camTarget = null;
+      autoTimer = setTimeout(() => { controls.autoRotate = true; }, 2000);
+    }
+  }
   controls.update();
   renderer.render(scene, camera);
 }
 animate();
 
-/* Resize */
-window.addEventListener("resize", () => {
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  camera.aspect = container.clientWidth / container.clientHeight;
-  camera.updateProjectionMatrix();
+window.addEventListener('resize', () => {
+  const w = container.clientWidth, h = container.clientHeight;
+  renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix();
 });
 </script>
 </body>
