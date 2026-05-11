@@ -1,0 +1,211 @@
+{
+  "bakedShadows": true,
+  "groundReflection": false,
+  "physicalReflections": false,
+  "shadowBaker": {
+    "randomizedLight": {
+      "object": {
+        "uuid": "f8243ac6-d188-4bf8-aab8-e66bcf1b5e7b",
+        "type": "DirectionalLight",
+        "castShadow": true,
+        "layers": 32,
+        "matrix": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "children": [
+          {
+            "uuid": "b2cf63c9-e4a1-4640-b51f-d752ee920465",
+            "type": "Object3D",
+            "layers": 1,
+            "matrix": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              -0.10779346278269519,
+              -0.9881656202937089,
+              -0.10912963048991484,
+              1
+            ]
+          }
+        ],
+        "color": 16777215,
+        "intensity": 10,
+        "shadow": {
+          "radius": 10,
+          "mapSize": [
+            1024,
+            1024
+          ],
+          "camera": {
+            "uuid": "663e5204-5d5e-474f-8778-4a6891b0636f",
+            "type": "OrthographicCamera",
+            "layers": 1,
+            "zoom": 1,
+            "left": -2,
+            "right": 2,
+            "top": 2,
+            "bottom": -2,
+            "near": -2,
+            "far": 41,
+            "view": {
+              "enabled": true,
+              "fullWidth": 1024,
+              "fullHeight": 1024,
+              "offsetX": -0.25,
+              "offsetY": 0.375,
+              "width": 1024,
+              "height": 1024
+            }
+          }
+        }
+      },
+      "type": "DirectionalLight2",
+      "target": [
+        -0.10779346278269519,
+        -0.9881656202937089,
+        -0.10912963048991484
+      ],
+      "shadowParams": {
+        "enabled": true,
+        "radius": 10,
+        "width": 1024,
+        "height": 1024,
+        "bias": 0,
+        "normalBias": 0,
+        "near": 1.5,
+        "far": 20,
+        "frustumSize": 4
+      },
+      "randomParams": {
+        "focus": 1,
+        "spread": 0.4,
+        "distanceScale": 20,
+        "minDistanceScale": {
+          "x": 10,
+          "y": 10,
+          "z": 10,
+          "isVector3": true
+        },
+        "normalDirection": {
+          "x": 0,
+          "y": 1,
+          "z": 0,
+          "isVector3": true
+        },
+        "direction": {
+          "x": 0.2,
+          "y": 0.96,
+          "z": 0.2,
+          "isVector3": true
+        }
+      }
+    },
+    "maxFrameNumber": 400,
+    "groundMapMode": "map",
+    "alphaVignette": false,
+    "alphaVignetteAxis": "xy"
+  },
+  "material": {
+    "uuid": "f957e44f-8374-4a76-964c-4872349ec81e",
+    "resource": "materials"
+  },
+  "visible": true,
+  "size": 8,
+  "yOffset": 0,
+  "renderToDepth": true,
+  "tonemapGround": true,
+  "type": "Ground",
+  "resources": {
+    "geometries": {},
+    "materials": {
+      "f957e44f-8374-4a76-964c-4872349ec81e": {
+        "metadata": {
+          "version": 4.5,
+          "type": "Material",
+          "generator": "Material.toJSON"
+        },
+        "uuid": "f957e44f-8374-4a76-964c-4872349ec81e",
+        "type": "MeshStandardMaterial2",
+        "name": "BaseGroundMaterial",
+        "color": 16579836,
+        "roughness": 0.2826086956521739,
+        "metalness": 0.5760869565217391,
+        "sheen": 0,
+        "sheenColor": 0,
+        "sheenRoughness": 1,
+        "emissive": 0,
+        "specularIntensity": 1,
+        "specularColor": 16777215,
+        "clearcoat": 0,
+        "clearcoatRoughness": 0,
+        "iridescence": 0,
+        "iridescenceIOR": 1.3,
+        "iridescenceThicknessRange": [
+          100,
+          400
+        ],
+        "envMapIntensity": 1,
+        "reflectivity": 0.5,
+        "transmission": 0.021739130434782608,
+        "thickness": 0,
+        "attenuationDistance": 0,
+        "attenuationColor": 16777215,
+        "depthFunc": 3,
+        "depthTest": true,
+        "depthWrite": true,
+        "colorWrite": true,
+        "stencilWrite": false,
+        "stencilWriteMask": 255,
+        "stencilFunc": 519,
+        "stencilRef": 0,
+        "stencilFuncMask": 255,
+        "stencilFail": 7680,
+        "stencilZFail": 7680,
+        "stencilZPass": 7680,
+        "fog": false,
+        "userData": {
+          "renderToDepth": true,
+          "postTonemap": true,
+          "ssaoDisabled": true,
+          "sscsDisabled": true,
+          "ssreflDisabled": false,
+          "ssreflNonPhysical": true,
+          "gMapMode": "map",
+          "ALPHA_I_RGBA_PACKING": false,
+          "_1330dca6-50c1-4ad5-9ddf-fdbc76d67b52_version": 9,
+          "_a140d7bf-4741-454e-9585-6e3b78a5d1c9_version": 1,
+          "uuid": "f957e44f-8374-4a76-964c-4872349ec81e"
+        }
+      }
+    },
+    "textures": {},
+    "images": {},
+    "shapes": {},
+    "skeletons": {},
+    "animations": {}
+  }
+}

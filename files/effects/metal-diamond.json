@@ -1,0 +1,351 @@
+{
+  "variations": [
+    {
+      "uuid": "metal",
+      "title": "Gold Colors",
+      "preview": "color",
+      "materials": [
+        {
+          "uuid": "4D053F00-A707-48C0-86A2-94E30CB135A5",
+          "resource": "materials"
+        },
+        {
+          "uuid": "7E0F59F9-6C95-41EA-84E6-D211DC1F7015",
+          "resource": "materials"
+        },
+        {
+          "uuid": "B23F08DD-A9CF-481C-AFB5-3216D9D46966",
+          "resource": "materials"
+        }
+      ]
+    },
+    {
+      "uuid": "diamond",
+      "title": "Center Gem",
+      "preview": "color",
+      "materials": [
+        {
+          "uuid": "913DB7B8-3E15-45CF-8723-5881FA07F0B3",
+          "resource": "materials"
+        },
+        {
+          "uuid": "755A0F08-E4C6-49C9-B4E1-551B237B8643",
+          "resource": "materials"
+        },
+        {
+          "uuid": "CFEA113F-8111-41BD-AFB8-99DA1ABBDFEA",
+          "resource": "materials"
+        },
+        {
+          "uuid": "50A38D98-149D-44F8-8F08-B707076F627B",
+          "resource": "materials"
+        },
+        {
+          "uuid": "423B57DD-285E-49B2-A0B4-183F648A1BBF",
+          "resource": "materials"
+        }
+      ]
+    }
+  ],
+  "type": "MaterialConfiguratorPlugin",
+  "resources": {
+    "geometries": {},
+    "materials": {
+      "4D053F00-A707-48C0-86A2-94E30CB135A5": {
+        "metadata": {
+          "version": 4.5,
+          "type": "Material",
+          "generator": "Material.toJSON"
+        },
+        "uuid": "4D053F00-A707-48C0-86A2-94E30CB135A5",
+        "type": "MeshStandardMaterial2",
+        "name": "metal",
+        "color": 9803157,
+        "roughness": 0,
+        "metalness": 1,
+        "sheen": 0,
+        "sheenColor": 0,
+        "sheenRoughness": 1,
+        "emissive": 0,
+        "specularIntensity": 1,
+        "specularColor": 16777215,
+        "clearcoat": 0,
+        "clearcoatRoughness": 0,
+        "iridescence": 0,
+        "iridescenceIOR": 1.3,
+        "iridescenceThicknessRange": [
+          100,
+          400
+        ],
+        "envMapIntensity": 1,
+        "reflectivity": 0.49999999999999983,
+        "transmission": 0,
+        "thickness": 0,
+        "attenuationDistance": 0,
+        "attenuationColor": 16777215,
+        "side": 2,
+        "depthFunc": 3,
+        "depthTest": true,
+        "depthWrite": true,
+        "colorWrite": true,
+        "stencilWrite": false,
+        "stencilWriteMask": 255,
+        "stencilFunc": 519,
+        "stencilRef": 0,
+        "stencilFuncMask": 255,
+        "stencilFail": 7680,
+        "stencilZFail": 7680,
+        "stencilZPass": 7680,
+        "fog": false,
+        "userData": {
+          "uuid": "4D053F00-A707-48C0-86A2-94E30CB135A5"
+        }
+      },
+      "7E0F59F9-6C95-41EA-84E6-D211DC1F7015": {
+        "metadata": {
+          "version": 4.5,
+          "type": "Material",
+          "generator": "Material.toJSON"
+        },
+        "uuid": "7E0F59F9-6C95-41EA-84E6-D211DC1F7015",
+        "type": "MeshStandardMaterial2",
+        "name": "metal",
+        "color": 16289853,
+        "roughness": 0,
+        "metalness": 1,
+        "sheen": 0,
+        "sheenColor": 0,
+        "sheenRoughness": 1,
+        "emissive": 0,
+        "specularIntensity": 1,
+        "specularColor": 16777215,
+        "clearcoat": 0,
+        "clearcoatRoughness": 0,
+        "iridescence": 0,
+        "iridescenceIOR": 1.3,
+        "iridescenceThicknessRange": [
+          100,
+          400
+        ],
+        "envMapIntensity": 1,
+        "reflectivity": 0.49999999999999983,
+        "transmission": 0,
+        "thickness": 0,
+        "attenuationDistance": 0,
+        "attenuationColor": 16777215,
+        "side": 2,
+        "depthFunc": 3,
+        "depthTest": true,
+        "depthWrite": true,
+        "colorWrite": true,
+        "stencilWrite": false,
+        "stencilWriteMask": 255,
+        "stencilFunc": 519,
+        "stencilRef": 0,
+        "stencilFuncMask": 255,
+        "stencilFail": 7680,
+        "stencilZFail": 7680,
+        "stencilZPass": 7680,
+        "fog": false,
+        "userData": {
+          "uuid": "7E0F59F9-6C95-41EA-84E6-D211DC1F7015"
+        }
+      },
+      "B23F08DD-A9CF-481C-AFB5-3216D9D46966": {
+        "metadata": {
+          "version": 4.5,
+          "type": "Material",
+          "generator": "Material.toJSON"
+        },
+        "uuid": "B23F08DD-A9CF-481C-AFB5-3216D9D46966",
+        "type": "MeshStandardMaterial2",
+        "name": "metal",
+        "color": 13986105,
+        "roughness": 0,
+        "metalness": 1,
+        "sheen": 0,
+        "sheenColor": 0,
+        "sheenRoughness": 1,
+        "emissive": 0,
+        "specularIntensity": 1,
+        "specularColor": 16777215,
+        "clearcoat": 0,
+        "clearcoatRoughness": 0,
+        "iridescence": 0,
+        "iridescenceIOR": 1.3,
+        "iridescenceThicknessRange": [
+          100,
+          400
+        ],
+        "envMapIntensity": 1,
+        "reflectivity": 0.49999999999999983,
+        "transmission": 0,
+        "thickness": 0,
+        "attenuationDistance": 0,
+        "attenuationColor": 16777215,
+        "side": 2,
+        "depthFunc": 3,
+        "depthTest": true,
+        "depthWrite": true,
+        "colorWrite": true,
+        "stencilWrite": false,
+        "stencilWriteMask": 255,
+        "stencilFunc": 519,
+        "stencilRef": 0,
+        "stencilFuncMask": 255,
+        "stencilFail": 7680,
+        "stencilZFail": 7680,
+        "stencilZPass": 7680,
+        "fog": false,
+        "userData": {
+          "uuid": "B23F08DD-A9CF-481C-AFB5-3216D9D46966"
+        }
+      },
+      "913DB7B8-3E15-45CF-8723-5881FA07F0B3": {
+        "name": "Diamond",
+        "uuid": "913DB7B8-3E15-45CF-8723-5881FA07F0B3",
+        "color": 16579836,
+        "envMapIntensity": 1,
+        "dispersion": 0.012,
+        "squashFactor": 0.98,
+        "geometryFactor": 0.5,
+        "gammaFactor": 1,
+        "absorptionFactor": 1,
+        "reflectivity": 0.5,
+        "refractiveIndex": 2.4,
+        "rayBounces": 5,
+        "diamondOrientedEnvMap": 0,
+        "boostFactors": {
+          "x": 1,
+          "y": 1,
+          "z": 1,
+          "isVector3": true
+        },
+        "transmission": 0,
+        "isDiamondMaterialParameters": true,
+        "type": "DiamondMaterial",
+        "userData": {
+          "separateEnvMapIntensity": true,
+          "uuid": "913DB7B8-3E15-45CF-8723-5881FA07F0B3"
+        }
+      },
+      "755A0F08-E4C6-49C9-B4E1-551B237B8643": {
+        "name": "Citrine",
+        "uuid": "755A0F08-E4C6-49C9-B4E1-551B237B8643",
+        "color": 15714585,
+        "envMapIntensity": 1,
+        "dispersion": 0.025,
+        "squashFactor": 0.98,
+        "geometryFactor": 0.5,
+        "gammaFactor": 1,
+        "absorptionFactor": 1,
+        "reflectivity": 0.5,
+        "refractiveIndex": 2.4,
+        "rayBounces": 5,
+        "diamondOrientedEnvMap": 0,
+        "boostFactors": {
+          "x": 1.3,
+          "y": 1,
+          "z": 0.8,
+          "isVector3": true
+        },
+        "transmission": 0,
+        "isDiamondMaterialParameters": true,
+        "type": "DiamondMaterial",
+        "userData": {
+          "separateEnvMapIntensity": true,
+          "uuid": "755A0F08-E4C6-49C9-B4E1-551B237B8643"
+        }
+      },
+      "CFEA113F-8111-41BD-AFB8-99DA1ABBDFEA": {
+        "name": "Emerald",
+        "uuid": "CFEA113F-8111-41BD-AFB8-99DA1ABBDFEA",
+        "color": 376414,
+        "envMapIntensity": 1,
+        "dispersion": 0.008700000000000001,
+        "squashFactor": 0.98,
+        "geometryFactor": 0.5,
+        "gammaFactor": 1,
+        "absorptionFactor": 1.6,
+        "reflectivity": 0.5,
+        "refractiveIndex": 1.96,
+        "rayBounces": 5,
+        "diamondOrientedEnvMap": 0,
+        "boostFactors": {
+          "x": -0.30000000000000004,
+          "y": 1,
+          "z": 1,
+          "isVector3": true
+        },
+        "transmission": 0,
+        "isDiamondMaterialParameters": true,
+        "type": "DiamondMaterial",
+        "userData": {
+          "separateEnvMapIntensity": true,
+          "uuid": "CFEA113F-8111-41BD-AFB8-99DA1ABBDFEA"
+        }
+      },
+      "50A38D98-149D-44F8-8F08-B707076F627B": {
+        "name": "Sapphire",
+        "uuid": "50A38D98-149D-44F8-8F08-B707076F627B",
+        "color": 806310,
+        "envMapIntensity": 1,
+        "dispersion": 0.0098,
+        "squashFactor": 0.98,
+        "geometryFactor": 0.5,
+        "gammaFactor": 1,
+        "absorptionFactor": 1.6,
+        "reflectivity": 0.5,
+        "refractiveIndex": 2.17,
+        "rayBounces": 5,
+        "diamondOrientedEnvMap": 0,
+        "boostFactors": {
+          "x": 1,
+          "y": 1,
+          "z": 1.2,
+          "isVector3": true
+        },
+        "transmission": 0,
+        "isDiamondMaterialParameters": true,
+        "type": "DiamondMaterial",
+        "userData": {
+          "separateEnvMapIntensity": true,
+          "uuid": "50A38D98-149D-44F8-8F08-B707076F627B"
+        }
+      },
+      "423B57DD-285E-49B2-A0B4-183F648A1BBF": {
+        "name": "Ruby",
+        "uuid": "423B57DD-285E-49B2-A0B4-183F648A1BBF",
+        "color": 12652335,
+        "envMapIntensity": 1,
+        "dispersion": 0.0098,
+        "squashFactor": 0.98,
+        "geometryFactor": 0.5,
+        "gammaFactor": 1,
+        "absorptionFactor": 1.6,
+        "reflectivity": 0.5,
+        "refractiveIndex": 2.17,
+        "rayBounces": 5,
+        "diamondOrientedEnvMap": 0,
+        "boostFactors": {
+          "x": 1.5,
+          "y": 0.7,
+          "z": 1,
+          "isVector3": true
+        },
+        "transmission": 0,
+        "isDiamondMaterialParameters": true,
+        "type": "DiamondMaterial",
+        "userData": {
+          "separateEnvMapIntensity": true,
+          "uuid": "423B57DD-285E-49B2-A0B4-183F648A1BBF"
+        }
+      }
+    },
+    "textures": {},
+    "images": {},
+    "shapes": {},
+    "skeletons": {},
+    "animations": {}
+  }
+}

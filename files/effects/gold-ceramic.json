@@ -1,0 +1,407 @@
+{
+  "variations": [
+    {
+      "uuid": "gold",
+      "title": "Gold Colors",
+      "preview": "color",
+      "materials": [
+        {
+          "uuid": "621bc562-56ba-48dd-a39b-cd4dde59637f",
+          "resource": "materials"
+        },
+        {
+          "uuid": "aa7962e7-d3e2-4ef1-8122-b55745d38904",
+          "resource": "materials"
+        },
+        {
+          "uuid": "ba86180e-9db3-42c4-b3f1-7970bb1a7cea",
+          "resource": "materials"
+        }
+      ]
+    },
+    {
+      "uuid": "ceramic",
+      "title": "Ceramic Colors",
+      "preview": "color",
+      "materials": [
+        {
+          "uuid": "9cfabed4-7463-4184-99b2-cd5dc2f9c538",
+          "resource": "materials"
+        },
+        {
+          "uuid": "035527e7-1c82-49d1-9319-1bfc4eb3af8a",
+          "resource": "materials"
+        },
+        {
+          "uuid": "e824f702-e61e-4efb-ac9c-a8ef02b6b515",
+          "resource": "materials"
+        },
+        {
+          "uuid": "f48c5f80-2e6c-4382-bc9b-8324e2069da7",
+          "resource": "materials"
+        }
+      ]
+    }
+  ],
+  "type": "MaterialConfiguratorPlugin",
+  "resources": {
+    "geometries": {},
+    "materials": {
+      "621bc562-56ba-48dd-a39b-cd4dde59637f": {
+        "metadata": {
+          "version": 4.5,
+          "type": "Material",
+          "generator": "Material.toJSON"
+        },
+        "uuid": "621bc562-56ba-48dd-a39b-cd4dde59637f",
+        "type": "MeshStandardMaterial2",
+        "name": "White Gold",
+        "color": 7631988,
+        "roughness": 0,
+        "metalness": 1,
+        "sheen": 0,
+        "sheenColor": 0,
+        "sheenRoughness": 1,
+        "emissive": 0,
+        "specularIntensity": 1,
+        "specularColor": 16777215,
+        "clearcoat": 0,
+        "clearcoatRoughness": 0,
+        "iridescence": 0,
+        "iridescenceIOR": 1.3,
+        "iridescenceThicknessRange": [
+          100,
+          400
+        ],
+        "envMapIntensity": 1,
+        "reflectivity": 0.49999999999999983,
+        "transmission": 0,
+        "thickness": 0,
+        "attenuationDistance": 0,
+        "attenuationColor": 16777215,
+        "side": 2,
+        "depthFunc": 3,
+        "depthTest": true,
+        "depthWrite": true,
+        "colorWrite": true,
+        "stencilWrite": false,
+        "stencilWriteMask": 255,
+        "stencilFunc": 519,
+        "stencilRef": 0,
+        "stencilFuncMask": 255,
+        "stencilFail": 7680,
+        "stencilZFail": 7680,
+        "stencilZPass": 7680,
+        "fog": false,
+        "userData": {
+          "uuid": "621bc562-56ba-48dd-a39b-cd4dde59637f"
+        }
+      },
+      "aa7962e7-d3e2-4ef1-8122-b55745d38904": {
+        "metadata": {
+          "version": 4.5,
+          "type": "Material",
+          "generator": "Material.toJSON"
+        },
+        "uuid": "aa7962e7-d3e2-4ef1-8122-b55745d38904",
+        "type": "MeshStandardMaterial2",
+        "name": "Gold",
+        "color": 11558692,
+        "roughness": 0,
+        "metalness": 1,
+        "sheen": 0,
+        "sheenColor": 0,
+        "sheenRoughness": 1,
+        "emissive": 0,
+        "specularIntensity": 1,
+        "specularColor": 16777215,
+        "clearcoat": 0,
+        "clearcoatRoughness": 0,
+        "iridescence": 0,
+        "iridescenceIOR": 1.3,
+        "iridescenceThicknessRange": [
+          100,
+          400
+        ],
+        "envMapIntensity": 1,
+        "reflectivity": 0.49999999999999983,
+        "transmission": 0,
+        "thickness": 0,
+        "attenuationDistance": 0,
+        "attenuationColor": 16777215,
+        "side": 2,
+        "depthFunc": 3,
+        "depthTest": true,
+        "depthWrite": true,
+        "colorWrite": true,
+        "stencilWrite": false,
+        "stencilWriteMask": 255,
+        "stencilFunc": 519,
+        "stencilRef": 0,
+        "stencilFuncMask": 255,
+        "stencilFail": 7680,
+        "stencilZFail": 7680,
+        "stencilZPass": 7680,
+        "fog": false,
+        "userData": {
+          "uuid": "aa7962e7-d3e2-4ef1-8122-b55745d38904"
+        }
+      },
+      "ba86180e-9db3-42c4-b3f1-7970bb1a7cea": {
+        "metadata": {
+          "version": 4.5,
+          "type": "Material",
+          "generator": "Material.toJSON"
+        },
+        "uuid": "ba86180e-9db3-42c4-b3f1-7970bb1a7cea",
+        "type": "MeshStandardMaterial2",
+        "name": "Rose Gold",
+        "color": 12340008,
+        "roughness": 0,
+        "metalness": 1,
+        "sheen": 0,
+        "sheenColor": 0,
+        "sheenRoughness": 1,
+        "emissive": 0,
+        "specularIntensity": 1,
+        "specularColor": 16777215,
+        "clearcoat": 0,
+        "clearcoatRoughness": 0,
+        "iridescence": 0,
+        "iridescenceIOR": 1.3,
+        "iridescenceThicknessRange": [
+          100,
+          400
+        ],
+        "envMapIntensity": 1,
+        "reflectivity": 0.49999999999999983,
+        "transmission": 0,
+        "thickness": 0,
+        "attenuationDistance": 0,
+        "attenuationColor": 16777215,
+        "side": 2,
+        "depthFunc": 3,
+        "depthTest": true,
+        "depthWrite": true,
+        "colorWrite": true,
+        "stencilWrite": false,
+        "stencilWriteMask": 255,
+        "stencilFunc": 519,
+        "stencilRef": 0,
+        "stencilFuncMask": 255,
+        "stencilFail": 7680,
+        "stencilZFail": 7680,
+        "stencilZPass": 7680,
+        "fog": false,
+        "userData": {
+          "uuid": "ba86180e-9db3-42c4-b3f1-7970bb1a7cea"
+        }
+      },
+      "9cfabed4-7463-4184-99b2-cd5dc2f9c538": {
+        "metadata": {
+          "version": 4.5,
+          "type": "Material",
+          "generator": "Material.toJSON"
+        },
+        "uuid": "9cfabed4-7463-4184-99b2-cd5dc2f9c538",
+        "type": "MeshStandardMaterial2",
+        "name": "White",
+        "color": 16579836,
+        "roughness": 0.17687722911005435,
+        "metalness": 0.3181815769361413,
+        "sheen": 0,
+        "sheenColor": 0,
+        "sheenRoughness": 1,
+        "emissive": 0,
+        "specularIntensity": 1,
+        "specularColor": 16777215,
+        "clearcoat": 0,
+        "clearcoatRoughness": 0,
+        "iridescence": 0,
+        "iridescenceIOR": 1.3,
+        "iridescenceThicknessRange": [
+          100,
+          400
+        ],
+        "envMapIntensity": 1,
+        "reflectivity": 0.49999999999999983,
+        "transmission": 0,
+        "thickness": 0,
+        "attenuationDistance": 0,
+        "attenuationColor": 16777215,
+        "side": 2,
+        "depthFunc": 3,
+        "depthTest": true,
+        "depthWrite": true,
+        "colorWrite": true,
+        "stencilWrite": false,
+        "stencilWriteMask": 255,
+        "stencilFunc": 519,
+        "stencilRef": 0,
+        "stencilFuncMask": 255,
+        "stencilFail": 7680,
+        "stencilZFail": 7680,
+        "stencilZPass": 7680,
+        "fog": false,
+        "userData": {
+          "uuid": "9cfabed4-7463-4184-99b2-cd5dc2f9c538"
+        }
+      },
+      "035527e7-1c82-49d1-9319-1bfc4eb3af8a": {
+        "metadata": {
+          "version": 4.5,
+          "type": "Material",
+          "generator": "Material.toJSON"
+        },
+        "uuid": "035527e7-1c82-49d1-9319-1bfc4eb3af8a",
+        "type": "MeshStandardMaterial2",
+        "name": "Black",
+        "color": 263172,
+        "roughness": 0.17687722911005435,
+        "metalness": 0.3181815769361413,
+        "sheen": 0,
+        "sheenColor": 0,
+        "sheenRoughness": 1,
+        "emissive": 0,
+        "specularIntensity": 1,
+        "specularColor": 16777215,
+        "clearcoat": 0,
+        "clearcoatRoughness": 0,
+        "iridescence": 0,
+        "iridescenceIOR": 1.3,
+        "iridescenceThicknessRange": [
+          100,
+          400
+        ],
+        "envMapIntensity": 1,
+        "reflectivity": 0.49999999999999983,
+        "transmission": 0,
+        "thickness": 0,
+        "attenuationDistance": 0,
+        "attenuationColor": 16777215,
+        "side": 2,
+        "depthFunc": 3,
+        "depthTest": true,
+        "depthWrite": true,
+        "colorWrite": true,
+        "stencilWrite": false,
+        "stencilWriteMask": 255,
+        "stencilFunc": 519,
+        "stencilRef": 0,
+        "stencilFuncMask": 255,
+        "stencilFail": 7680,
+        "stencilZFail": 7680,
+        "stencilZPass": 7680,
+        "fog": false,
+        "userData": {
+          "uuid": "035527e7-1c82-49d1-9319-1bfc4eb3af8a"
+        }
+      },
+      "e824f702-e61e-4efb-ac9c-a8ef02b6b515": {
+        "metadata": {
+          "version": 4.5,
+          "type": "Material",
+          "generator": "Material.toJSON"
+        },
+        "uuid": "e824f702-e61e-4efb-ac9c-a8ef02b6b515",
+        "type": "MeshStandardMaterial2",
+        "name": "Red",
+        "color": 4587777,
+        "roughness": 0.17687722911005435,
+        "metalness": 0.3181815769361413,
+        "sheen": 0,
+        "sheenColor": 0,
+        "sheenRoughness": 1,
+        "emissive": 0,
+        "specularIntensity": 1,
+        "specularColor": 16777215,
+        "clearcoat": 0,
+        "clearcoatRoughness": 0,
+        "iridescence": 0,
+        "iridescenceIOR": 1.3,
+        "iridescenceThicknessRange": [
+          100,
+          400
+        ],
+        "envMapIntensity": 1,
+        "reflectivity": 0.49999999999999983,
+        "transmission": 0,
+        "thickness": 0,
+        "attenuationDistance": 0,
+        "attenuationColor": 16777215,
+        "side": 2,
+        "depthFunc": 3,
+        "depthTest": true,
+        "depthWrite": true,
+        "colorWrite": true,
+        "stencilWrite": false,
+        "stencilWriteMask": 255,
+        "stencilFunc": 519,
+        "stencilRef": 0,
+        "stencilFuncMask": 255,
+        "stencilFail": 7680,
+        "stencilZFail": 7680,
+        "stencilZPass": 7680,
+        "fog": false,
+        "userData": {
+          "uuid": "e824f702-e61e-4efb-ac9c-a8ef02b6b515"
+        }
+      },
+      "f48c5f80-2e6c-4382-bc9b-8324e2069da7": {
+        "metadata": {
+          "version": 4.5,
+          "type": "Material",
+          "generator": "Material.toJSON"
+        },
+        "uuid": "f48c5f80-2e6c-4382-bc9b-8324e2069da7",
+        "type": "MeshStandardMaterial2",
+        "name": "Blue",
+        "color": 75078,
+        "roughness": 0.17687722911005435,
+        "metalness": 0.3181815769361413,
+        "sheen": 0,
+        "sheenColor": 0,
+        "sheenRoughness": 1,
+        "emissive": 0,
+        "specularIntensity": 1,
+        "specularColor": 16777215,
+        "clearcoat": 0,
+        "clearcoatRoughness": 0,
+        "iridescence": 0,
+        "iridescenceIOR": 1.3,
+        "iridescenceThicknessRange": [
+          100,
+          400
+        ],
+        "envMapIntensity": 1,
+        "reflectivity": 0.49999999999999983,
+        "transmission": 0,
+        "thickness": 0,
+        "attenuationDistance": 0,
+        "attenuationColor": 16777215,
+        "side": 2,
+        "depthFunc": 3,
+        "depthTest": true,
+        "depthWrite": true,
+        "colorWrite": true,
+        "stencilWrite": false,
+        "stencilWriteMask": 255,
+        "stencilFunc": 519,
+        "stencilRef": 0,
+        "stencilFuncMask": 255,
+        "stencilFail": 7680,
+        "stencilZFail": 7680,
+        "stencilZPass": 7680,
+        "fog": false,
+        "userData": {
+          "uuid": "f48c5f80-2e6c-4382-bc9b-8324e2069da7"
+        }
+      }
+    },
+    "textures": {},
+    "images": {},
+    "shapes": {},
+    "skeletons": {},
+    "animations": {}
+  }
+}
